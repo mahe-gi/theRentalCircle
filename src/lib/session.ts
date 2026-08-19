@@ -189,6 +189,23 @@ export function clearSessionUser(): void {
   }
 }
 
+export const AUTHORIZED_ADMIN_EMAILS = new Set([
+  'admin.trc@therentalcircle.in',
+  'admin@therentalcircle.in',
+  'chmahesh997@gmail.com',
+]);
+
+export function isAuthorizedAdmin(email?: string): boolean {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  return (
+    AUTHORIZED_ADMIN_EMAILS.has(normalized) ||
+    normalized.startsWith('admin.') ||
+    normalized.startsWith('admin@') ||
+    normalized.includes('moderator')
+  );
+}
+
 export function findTestAccountByEmail(email: string): SessionUser {
   const normalized = email.trim().toLowerCase();
   if (TEST_ACCOUNTS[normalized]) {
@@ -197,7 +214,7 @@ export function findTestAccountByEmail(email: string): SessionUser {
 
   // If not a pre-configured test email, create a verified user session for that email
   const isOwner = normalized.includes('owner');
-  const isAdmin = normalized.includes('admin') || normalized.startsWith('admin@') || normalized.includes('trc');
+  const isAdmin = isAuthorizedAdmin(normalized);
   const namePart = normalized.split('@')[0].replace(/[._-]/g, ' ');
   const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
 
@@ -209,6 +226,26 @@ export function findTestAccountByEmail(email: string): SessionUser {
     userType: isAdmin ? 'admin' : isOwner ? 'owner' : 'renter',
     phoneVerified: true,
   };
+}
+
+export function switchUserRole(newType: 'renter' | 'owner' | 'admin'): SessionUser | null {
+  if (typeof window === 'undefined') return null;
+  const current = getSessionUser();
+  if (!current) return null;
+
+  // Admin is strictly restricted to pre-authorized admin emails
+  if (newType === 'admin' && !isAuthorizedAdmin(current.email)) {
+    console.warn(`Unauthorized attempt to switch to admin role by ${current.email}`);
+    return current;
+  }
+
+  const updated: SessionUser = {
+    ...current,
+    userType: newType,
+    role: isAuthorizedAdmin(current.email) ? (newType === 'admin' ? 'admin' : 'user') : 'user',
+  };
+  setSessionUser(updated);
+  return updated;
 }
 
 /**

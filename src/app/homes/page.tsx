@@ -22,107 +22,55 @@ interface HomeItem {
   furnishing: string;
 }
 
-const SAMPLE_HOMES: HomeItem[] = [
-  {
-    slug: '1rk-independent-kondapur-botanical',
-    title: '1 RK Independent Unit near Botanical Garden',
-    cluster: 'Kondapur, Hyderabad',
-    propertyType: '1 RK Unit',
-    monthlyRent: 12000,
-    maintenanceCharges: 1000,
-    carpetAreaSqFt: 380,
-    coverImageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    isContactConfirmed: true,
-    confirmedDate: 'Aug 18, 2026',
-    corridor: 'kondapur',
-    furnishing: 'semi_furnished',
-  },
-  {
-    slug: '2bhk-semi-furnished-madhapur-ayyyappa',
-    title: '2 BHK Semi-Furnished near Ayyappa Society',
-    cluster: 'Madhapur, Hyderabad',
-    propertyType: '2 BHK Apartment',
-    monthlyRent: 26000,
-    maintenanceCharges: 2500,
-    carpetAreaSqFt: 1150,
-    coverImageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    isContactConfirmed: true,
-    confirmedDate: 'Aug 19, 2026',
-    corridor: 'madhapur',
-    furnishing: 'semi_furnished',
-  },
-  {
-    slug: 'private-room-colive-gachibowli',
-    title: 'Private Room in Standalone Residential Building',
-    cluster: 'Gachibowli, Hyderabad',
-    propertyType: 'Private Room',
-    monthlyRent: 8500,
-    maintenanceCharges: 0,
-    carpetAreaSqFt: 220,
-    coverImageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    isContactConfirmed: true,
-    confirmedDate: 'Aug 17, 2026',
-    corridor: 'gachibowli',
-    furnishing: 'fully_furnished',
-  },
-  {
-    slug: '1bhk-manikonda-ou-colony',
-    title: '1 BHK Standalone Floor near OU Colony',
-    cluster: 'Manikonda, Hyderabad',
-    propertyType: '1 BHK Apartment',
-    monthlyRent: 15000,
-    maintenanceCharges: 1200,
-    carpetAreaSqFt: 580,
-    coverImageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    isContactConfirmed: true,
-    confirmedDate: 'Aug 16, 2026',
-    corridor: 'manikonda',
-    furnishing: 'semi_furnished',
-  },
-  {
-    slug: '3bhk-financial-district-narsingi',
-    title: '3 BHK Gated Residence near Financial District',
-    cluster: 'Narsingi, Hyderabad',
-    propertyType: '3 BHK Apartment',
-    monthlyRent: 42000,
-    maintenanceCharges: 4000,
-    carpetAreaSqFt: 1850,
-    coverImageUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    isContactConfirmed: true,
-    confirmedDate: 'Aug 15, 2026',
-    corridor: 'financial_district',
-    furnishing: 'unfurnished',
-  },
-  {
-    slug: 'shared-room-hitec-city',
-    title: 'Dedicated Bedspace in 2 BHK Coliving Floor',
-    cluster: 'HITEC City, Hyderabad',
-    propertyType: 'Shared Room',
-    monthlyRent: 6000,
-    maintenanceCharges: 500,
-    carpetAreaSqFt: 180,
-    coverImageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    isContactConfirmed: true,
-    confirmedDate: 'Aug 14, 2026',
-    corridor: 'hitec_city',
-    furnishing: 'fully_furnished',
-  },
-];
-
 function BrowseHomesContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const [homes, setHomes] = useState<HomeItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedCorridors, setSelectedCorridors] = useState<string[]>([]);
   const [maxRent, setMaxRent] = useState<number>(50000);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+
+  // Fetch real published listings from backend API
+  useEffect(() => {
+    async function fetchListings() {
+      setIsLoading(true);
+      try {
+        const res = await fetch('/api/owner/listings', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.listings && Array.isArray(data.listings)) {
+            const published = data.listings.filter((l: any) => l.status === 'published');
+            const mapped: HomeItem[] = published.map((l: any) => ({
+              slug: l.slug,
+              title: l.title,
+              cluster: `${l.colonyOrSociety}, ${l.cluster.replace('_', ' ').toUpperCase()}`,
+              propertyType: l.propertyType.replace('_', ' ').toUpperCase(),
+              monthlyRent: l.monthlyRent,
+              maintenanceCharges: l.maintenanceCharges || 0,
+              carpetAreaSqFt: l.carpetAreaSqFt,
+              coverImageUrl: l.photos?.[0]?.url || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80',
+              hasConnectionEvidence: !!l.evidence,
+              isContactConfirmed: true,
+              confirmedDate: new Date(l.publishedAt || l.submittedAt || Date.now()).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }),
+              corridor: l.cluster,
+              furnishing: l.furnishingStatus,
+            }));
+            setHomes(mapped);
+            setIsLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load published homes:', err);
+      }
+      setHomes([]);
+      setIsLoading(false);
+    }
+    fetchListings();
+  }, []);
 
   // Sync state from URL query parameters (e.g. ?cluster=kondapur or ?q=Botanical)
   useEffect(() => {
@@ -162,7 +110,7 @@ function BrowseHomesContent() {
     router.push('/homes');
   };
 
-  const filteredHomes = SAMPLE_HOMES.filter(home => {
+  const filteredHomes = homes.filter(home => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const matches =

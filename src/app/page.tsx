@@ -3,45 +3,6 @@ import Link from 'next/link';
 import { Search, ArrowRight, ArrowUpRight, ShieldCheck, CheckCircle2, Lock, Building2, Check } from 'lucide-react';
 import { formatINR } from '@/lib/utils';
 
-const RECENT_LISTINGS = [
-  {
-    slug: '2bhk-semi-furnished-madhapur-ayyyappa',
-    title: '2 BHK Semi-Furnished near Ayyappa Society',
-    cluster: 'Madhapur, Hyderabad',
-    propertyType: '2 BHK Apartment',
-    monthlyRent: 26000,
-    maintenanceCharges: 2500,
-    carpetAreaSqFt: 1150,
-    coverImageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    confirmedDate: 'Aug 19, 2026',
-  },
-  {
-    slug: '1rk-independent-kondapur-botanical',
-    title: '1 RK Independent Unit near Botanical Garden',
-    cluster: 'Kondapur, Hyderabad',
-    propertyType: '1 RK Unit',
-    monthlyRent: 12000,
-    maintenanceCharges: 1000,
-    carpetAreaSqFt: 380,
-    coverImageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    confirmedDate: 'Aug 18, 2026',
-  },
-  {
-    slug: 'private-room-colive-gachibowli',
-    title: 'Private Room in Standalone Residential Building',
-    cluster: 'Gachibowli, Hyderabad',
-    propertyType: 'Private Room',
-    monthlyRent: 8500,
-    maintenanceCharges: 0,
-    carpetAreaSqFt: 220,
-    coverImageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1000&q=80',
-    hasConnectionEvidence: true,
-    confirmedDate: 'Aug 17, 2026',
-  },
-];
-
 const CORRIDORS = [
   {
     name: 'Kondapur & Botanical Garden',
@@ -74,8 +35,8 @@ export default function HomePage() {
     <div className="bg-white text-midnight font-sans antialiased selection:bg-cobalt selection:text-white">
       {/* 1. ASYMMETRIC SUNLIT EDITORIAL HERO (45/55 Split with First Row Peek) */}
       <section className="border-b border-border bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Column (45% / 5 cols) */}
             <div className="lg:col-span-5 flex flex-col justify-between space-y-6 text-left">
               <div className="space-y-4">
@@ -141,18 +102,22 @@ export default function HomePage() {
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-midnight/95 via-midnight/50 to-transparent p-6 text-white">
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="inline-flex items-center gap-1.5 font-bold text-citrus tracking-wide uppercase text-[11px]">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Property Connection Evidence Reviewed
+                    <ShieldCheck className="h-3.5 w-3.5" /> Direct Owner Verification
                   </span>
-                  <span className="text-white/70 text-[11px] font-mono">TRC-HYD-04</span>
+                  <span className="text-white/70 text-[11px] font-mono">West Hyderabad</span>
                 </div>
                 <div className="flex items-baseline justify-between pt-2 border-t border-white/10 mt-2">
                   <div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">2 BHK Semi-Furnished Apartment</h3>
-                    <p className="text-xs text-white/80 mt-0.5">Ayyappa Society, Madhapur, Hyderabad</p>
+                    <h3 className="text-xl font-bold text-white tracking-tight">Direct Owner Verified Homes</h3>
+                    <p className="text-xs text-white/80 mt-0.5">Gachibowli, Kondapur, Madhapur & HITEC City</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-black text-white tabular-nums">₹26,000</span>
-                    <span className="text-xs text-white/80">/month</span>
+                    <Link
+                      href="/homes"
+                      className="inline-flex items-center gap-1 rounded-[2px] bg-citrus px-3.5 py-1.5 text-xs font-black text-midnight hover:bg-citrus/90 transition-colors"
+                    >
+                      Browse Homes &rarr;
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -161,71 +126,50 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. RECENTLY REVIEWED HOMES */}
+      {/* 2. TWO-SIDED VALUE PILLARS */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border pb-5">
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-widest text-cobalt font-mono">Curated Inventory</span>
-            <h2 className="text-3xl font-black text-midnight tracking-tight mt-1">
-              Recently reviewed homes
-            </h2>
-            <p className="text-sm text-text-muted mt-1 font-normal">
-              Listing contacts confirmed and connection evidence reviewed across Hyderabad corridors.
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* For Renters */}
+          <div className="border border-border bg-surface-subtle/50 p-8 rounded-[2px] space-y-4 text-left">
+            <div className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase text-cobalt">
+              <Search className="h-4 w-4" /> For Prospective Renters
+            </div>
+            <h3 className="text-2xl font-black text-midnight tracking-tight">
+              Zero fake listings. Zero broker spam.
+            </h3>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              Every home on The Rental Circle is human-reviewed. View transparent rents, maintenance charges, and real room photos. Send your application directly to the owner.
             </p>
+            <div className="pt-2">
+              <Link
+                href="/homes"
+                className="inline-flex items-center gap-2 rounded-[2px] bg-midnight px-5 py-2.5 text-xs font-bold text-white hover:bg-cobalt transition-colors"
+              >
+                Browse Reviewed Homes <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
-          <Link href="/homes" className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wide uppercase text-midnight hover:text-cobalt transition-colors group">
-            Browse All Reviewed Homes <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {RECENT_LISTINGS.map(item => (
-            <Link
-              key={item.slug}
-              href={`/homes/${item.slug}`}
-              className="group block border border-border bg-white hover:border-midnight hover:shadow-[0_4px_20px_rgba(11,21,55,0.06)] transition-all duration-200 rounded-[2px] overflow-hidden"
-            >
-              <div className="relative aspect-[16/10] w-full overflow-hidden bg-surface-muted">
-                <img
-                  src={item.coverImageUrl}
-                  alt={item.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-[2px] bg-white/95 backdrop-blur-md border border-border px-2 py-1 text-[11px] font-bold text-verified shadow-sm">
-                  <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                  <span>Connection Reviewed</span>
-                </div>
-              </div>
-              <div className="p-5 space-y-3">
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black text-midnight tabular-nums tracking-tight">
-                      {formatINR(item.monthlyRent)}
-                    </span>
-                    <span className="text-xs font-medium text-text-muted">/mo</span>
-                  </div>
-                  <span className="text-xs font-medium text-text-muted tabular-nums">
-                    {item.maintenanceCharges ? `+ ${formatINR(item.maintenanceCharges)} maint.` : 'Maint. included'}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-[15px] font-bold text-midnight line-clamp-1 group-hover:text-cobalt transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {item.propertyType} • {item.cluster} • {item.carpetAreaSqFt} sq.ft
-                  </p>
-                </div>
-                <div className="border-t border-border-subtle pt-3 flex items-center justify-between text-xs">
-                  <span className="inline-flex items-center gap-1 text-verified font-semibold text-[11px]">
-                    <CheckCircle2 className="h-3 w-3 shrink-0" /> Contact Confirmed
-                  </span>
-                  <span className="text-[11px] text-text-faint font-mono">{item.confirmedDate}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
+          {/* For Property Owners */}
+          <div className="border border-border bg-white p-8 rounded-[2px] space-y-4 text-left shadow-xs">
+            <div className="inline-flex items-center gap-2 text-xs font-mono font-bold uppercase text-verified">
+              <Building2 className="h-4 w-4" /> For Property Owners
+            </div>
+            <h3 className="text-2xl font-black text-midnight tracking-tight">
+              Protect your phone number. Get qualified tenants.
+            </h3>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              Never publish your phone number on public forums or get spam calls. Review tenant profiles and release contact details only to the tenant you approve.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/list-your-property"
+                className="inline-flex items-center gap-2 rounded-[2px] border border-midnight bg-white px-5 py-2.5 text-xs font-bold text-midnight hover:bg-midnight hover:text-white transition-colors"
+              >
+                List Your Property <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 

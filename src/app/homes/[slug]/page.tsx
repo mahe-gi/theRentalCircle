@@ -21,6 +21,8 @@ import {
   CheckCircle,
 } from 'lucide-react';
 
+export const dynamicParams = true;
+
 export function generateStaticParams() {
   return [
     { slug: '1rk-independent-kondapur-botanical' },
