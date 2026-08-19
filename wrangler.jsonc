@@ -13,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "trc-production",
-      "database_id": "local-d1-placeholder"
+      "database_id": "1b7d6749-f1df-4486-b2d1-5e99ac3c9b22"
     }
   ],
   "r2_buckets": [
