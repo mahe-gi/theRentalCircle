@@ -1,0 +1,29 @@
+{
+  "name": "therentalcircle",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-02-14",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".open-next/assets"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "trc-production",
+      "database_id": "local-d1-placeholder"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PRIVATE_BUCKET",
+      "bucket_name": "trc-private"
+    },
+    {
+      "binding": "PUBLIC_BUCKET",
+      "bucket_name": "trc-public-media"
+    }
+  ]
+}

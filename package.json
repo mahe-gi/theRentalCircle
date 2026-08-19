@@ -1,0 +1,49 @@
+{
+  "name": "therentalcircle",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/lib/*.test.ts src/middleware.test.ts src/db/*.test.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "build:worker": "opennextjs-cloudflare build",
+    "preview:worker": "wrangler dev --port 8787"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1113.0",
+    "@aws-sdk/s3-request-presigner": "^3.1113.0",
+    "better-auth": "1.1.21",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.38.4",
+    "lucide-react": "^0.475.0",
+    "next": "16.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "resend": "^4.1.2",
+    "tailwind-merge": "^3.0.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.2",
+    "@types/node": "^22.13.4",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.4",
+    "eslint": "^9.20.1",
+    "eslint-config-next": "16.3.1",
+    "postcss": "^8.5.2",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.12",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.124.0"
+  }
+}
