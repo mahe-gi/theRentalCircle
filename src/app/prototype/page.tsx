@@ -81,7 +81,7 @@ export default function HomePage() {
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 border border-border bg-surface-subtle px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-wider text-cobalt rounded-[2px]">
                   <span className="h-1.5 w-1.5 rounded-full bg-citrus"></span>
-                  Hyderabad Pilot • Residential Rentals
+                  Hyderabad • Verified Residential Rentals
                 </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-[68px] font-black tracking-[-0.035em] text-midnight leading-[0.98]">
                   A clearer way to find your next home.
@@ -397,7 +397,7 @@ export default function HomePage() {
                 List your residential property in West Hyderabad
               </h2>
               <p className="text-base text-text-secondary leading-relaxed font-normal">
-                Connect directly with prospective renters without publishing your phone number. Free during the Hyderabad pilot.
+                Connect directly with verified renters without publishing your personal phone number. Zero brokerage commissions.
               </p>
             </div>
             <Link

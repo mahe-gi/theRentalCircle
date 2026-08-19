@@ -84,7 +84,7 @@ export function Navbar() {
                 The Rental Circle
               </span>
               <span className="hidden sm:inline-block rounded-[2px] bg-surface-muted border border-border px-1.5 py-0.5 text-[9px] font-mono font-bold tracking-widest text-text-muted uppercase">
-                {isAdmin ? "ADMIN DESK" : "HYD PILOT"}
+                {isAdmin ? "ADMIN DESK" : "HYDERABAD"}
               </span>
             </div>
           </Link>

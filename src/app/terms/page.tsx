@@ -15,7 +15,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-xs text-slate-500 font-mono">
-            Last updated: August 19, 2026 • Hyderabad Pilot Terms
+            Last updated: August 19, 2026 • Platform Terms
           </p>
         </div>
       </div>

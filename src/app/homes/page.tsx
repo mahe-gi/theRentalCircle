@@ -296,12 +296,20 @@ function BrowseHomesContent() {
                 <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed">
                   Try selecting a nearby locality or adjusting your budget slider to see available reviewed homes.
                 </p>
-                <button
-                  onClick={resetFilters}
-                  className="inline-flex items-center justify-center rounded-[2px] bg-midnight px-5 py-2.5 text-xs font-bold text-white hover:bg-cobalt transition-colors shadow-sm"
-                >
-                  Reset all filters
-                </button>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={resetFilters}
+                    className="inline-flex items-center justify-center rounded-[2px] bg-midnight px-5 py-2.5 text-xs font-bold text-white hover:bg-cobalt transition-colors shadow-sm"
+                  >
+                    Reset all filters
+                  </button>
+                  <Link
+                    href="/list-your-property"
+                    className="inline-flex items-center justify-center rounded-[2px] border border-border bg-white px-5 py-2.5 text-xs font-bold text-midnight hover:border-midnight transition-colors shadow-sm"
+                  >
+                    List Your Property in this Corridor &rarr;
+                  </Link>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

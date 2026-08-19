@@ -7,23 +7,15 @@ import {
   Mail, 
   ArrowRight, 
   ShieldCheck, 
-  Lock, 
   CheckCircle2, 
-  User, 
   Building2, 
-  ArrowUpRight,
-  RotateCcw,
-  Sparkles,
-  Check,
-  Search,
-  Phone,
-  UserPlus
+  Search, 
+  UserPlus,
+  AlertCircle
 } from 'lucide-react';
+import { authClient, signIn } from '@/lib/auth-client';
 import { 
   setSessionUser, 
-  findTestAccountByEmail, 
-  FAST_LOGIN_PROFILES, 
-  type FastLoginProfile,
   type SessionUser
 } from '@/lib/session';
 
@@ -39,7 +31,7 @@ function SignInContent() {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [resendCountdown, setResendCountdown] = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -70,124 +62,155 @@ function SignInContent() {
     return () => clearTimeout(timer);
   }, [isOtpSent, resendCountdown]);
 
-  const getRedirectUrlForUser = (user: SessionUser): string => {
+  const getRedirectUrlForUser = (userType: string, role?: string): string => {
     const redirectParam = searchParams.get('redirect');
     if (redirectParam) {
       return redirectParam;
     }
-    if (user.role === 'admin' || user.userType === 'admin') {
+    if (role === 'admin' || userType === 'admin') {
       return '/admin/listings';
     }
-    if (user.userType === 'owner') {
+    if (userType === 'owner') {
       return '/owner/listings';
     }
     return '/homes';
   };
 
-  const handleFastLogin = (profile: FastLoginProfile) => {
-    setSelectedProfileId(profile.id);
-    setIsLoading(true);
-
-    const user = profile.user;
-    setSessionUser(user);
-    setSuccessMessage("Authenticated as " + user.name + " (" + profile.label + ")");
-
-    setTimeout(() => {
-      const redirectParam = searchParams.get('redirect');
-      router.push(redirectParam || profile.redirectUrl);
-    }, 400);
-  };
-
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    setTimeout(() => {
-      const googleUser: SessionUser = {
-        id: "usr_google_" + Math.random().toString(36).substring(2, 8),
-        name: 'Ananya Sharma',
-        email: 'ananya.sharma@gmail.com',
-        role: 'user',
-        userType: 'renter',
-        phone: '+91 98765 43210',
-        phoneVerified: true,
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-      };
+    setErrorMessage(null);
+    try {
+      const redirectParam = searchParams.get('redirect');
+      const callbackURL = typeof window !== 'undefined'
+        ? (window.location.origin + (redirectParam || '/homes'))
+        : '/homes';
 
-      setSessionUser(googleUser);
-      setSuccessMessage('Signed in via Google OAuth successfully');
+      const res = await signIn.social({
+        provider: 'google',
+        callbackURL,
+      });
 
-      setTimeout(() => {
-        router.push(getRedirectUrlForUser(googleUser));
-      }, 400);
-    }, 500);
+      if (res?.error) {
+        setErrorMessage(res.error.message || 'Google authentication failed. Please verify credentials.');
+        setIsGoogleLoading(false);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Unable to initiate Google sign in. Please verify your Google Cloud Console credentials.');
+      setIsGoogleLoading(false);
+    }
   };
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
     setIsLoading(true);
+    setErrorMessage(null);
     
-    setTimeout(() => {
+    try {
+      const res = await authClient.emailOtp.sendVerificationOtp({
+        email: email.trim().toLowerCase(),
+        type: 'sign-in',
+      });
+
+      if (res?.error) {
+        setErrorMessage(res.error.message || 'Failed to send verification passcode.');
+      } else {
+        setIsOtpSent(true);
+        setOtp('');
+        setResendCountdown(30);
+        setCanResend(false);
+        setSuccessMessage(`A 6-digit verification passcode was sent to ${email.trim()}`);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Error dispatching verification passcode.');
+    } finally {
       setIsLoading(false);
-      setIsOtpSent(true);
-      setOtp('123456');
-      setResendCountdown(30);
-      setCanResend(false);
-    }, 400);
+    }
   };
 
-  const handleResendOtp = () => {
-    if (!canResend) return;
+  const handleResendOtp = async () => {
+    if (!canResend || !email.trim()) return;
     setIsLoading(true);
-    setTimeout(() => {
+    setErrorMessage(null);
+    try {
+      const res = await authClient.emailOtp.sendVerificationOtp({
+        email: email.trim().toLowerCase(),
+        type: 'sign-in',
+      });
+      if (res?.error) {
+        setErrorMessage(res.error.message || 'Failed to resend passcode.');
+      } else {
+        setResendCountdown(30);
+        setCanResend(false);
+        setSuccessMessage(`New passcode dispatched to ${email.trim()}`);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Error resending passcode.');
+    } finally {
       setIsLoading(false);
-      setOtp('123456');
-      setResendCountdown(30);
-      setCanResend(false);
-    }, 300);
+    }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp.trim()) return;
     setIsLoading(true);
+    setErrorMessage(null);
 
-    const user = findTestAccountByEmail(email);
-    setSessionUser(user);
-    setSuccessMessage("Authenticated successfully as " + user.name);
+    try {
+      const res = await authClient.signIn.emailOtp({
+        email: email.trim().toLowerCase(),
+        otp: otp.trim(),
+      });
 
-    const targetUrl = getRedirectUrlForUser(user);
-    setTimeout(() => {
-      router.push(targetUrl);
-    }, 400);
+      if (res?.error) {
+        setErrorMessage(res.error.message || 'Invalid verification passcode. Please check and try again.');
+      } else {
+        setSuccessMessage('Authenticated successfully.');
+        const redirectParam = searchParams.get('redirect');
+        router.push(redirectParam || '/homes');
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to verify passcode.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim() || !regEmail.trim()) return;
     setIsLoading(true);
+    setErrorMessage(null);
 
-    const newUser: SessionUser = {
-      id: "usr_" + Math.random().toString(36).substring(2, 9),
-      name: regName.trim(),
-      email: regEmail.trim().toLowerCase(),
-      role: 'user',
-      userType: regUserType,
-      phone: regPhone.trim() || '+91 98000 00000',
-      phoneVerified: true,
-    };
+    try {
+      const newUser: SessionUser = {
+        id: 'usr_' + Math.random().toString(36).substring(2, 9),
+        name: regName.trim(),
+        email: regEmail.trim().toLowerCase(),
+        role: 'user',
+        userType: regUserType,
+        phone: regPhone.trim() || '+91 98000 00000',
+        phoneVerified: true,
+      };
 
-    setSessionUser(newUser);
-    setSuccessMessage("Account created successfully as " + newUser.name + " (" + (regUserType === 'owner' ? 'Property Owner' : 'Renter') + ")");
+      setSessionUser(newUser);
+      setSuccessMessage(`Account created successfully as ${newUser.name} (${regUserType === 'owner' ? 'Property Owner' : 'Renter'})`);
 
-    const targetUrl = regUserType === 'owner' ? '/owner/listings' : '/homes';
-    setTimeout(() => {
-      router.push(targetUrl);
-    }, 450);
+      const targetUrl = getRedirectUrlForUser(regUserType, 'user');
+      setTimeout(() => {
+        router.push(targetUrl);
+      }, 400);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to create account.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-canvas text-midnight font-sans antialiased flex flex-col justify-center py-8 lg:py-14">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 w-full space-y-6">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 w-full space-y-6">
         
         {/* Main Authentication Card */}
         <div className="grid grid-cols-1 lg:grid-cols-12 border border-border rounded-[2px] overflow-hidden bg-white shadow-[0_4px_24px_rgba(11,21,55,0.06)]">
@@ -195,22 +218,22 @@ function SignInContent() {
           <div className="lg:col-span-7 p-8 sm:p-10 lg:p-12 flex flex-col justify-between space-y-6 text-left">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 border border-border bg-surface-subtle px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-wider text-cobalt rounded-[2px]">
-                <span className="h-1.5 w-1.5 rounded-full bg-citrus"></span>
-                Secure Access • Hyderabad Pilot
+                <span className="h-1.5 w-1.5 rounded-full bg-verified"></span>
+                Secure Access • Hyderabad
               </div>
               
               {/* Tab Switcher */}
               <div className="flex items-center gap-2 border-b border-border pb-1">
                 <button
                   type="button"
-                  onClick={() => { setActiveTab('signin'); setSuccessMessage(null); }}
+                  onClick={() => { setActiveTab('signin'); setErrorMessage(null); setSuccessMessage(null); }}
                   className={"pb-2.5 text-sm font-bold tracking-tight transition-all border-b-2 " + (activeTab === 'signin' ? "border-midnight text-midnight" : "border-transparent text-text-muted hover:text-midnight")}
                 >
                   Sign In
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setActiveTab('register'); setSuccessMessage(null); }}
+                  onClick={() => { setActiveTab('register'); setErrorMessage(null); setSuccessMessage(null); }}
                   className={"pb-2.5 text-sm font-bold tracking-tight transition-all border-b-2 " + (activeTab === 'register' ? "border-midnight text-midnight" : "border-transparent text-text-muted hover:text-midnight")}
                 >
                   Create Account (Register)
@@ -223,11 +246,18 @@ function SignInContent() {
                 </h1>
                 <p className="text-xs text-text-secondary leading-relaxed font-normal mt-1">
                   {activeTab === 'signin' 
-                    ? 'Access your reviewed properties, tenant applications, and moderation queue.'
+                    ? 'Access your verified properties, tenant applications, and direct messages.'
                     : 'Join the verified Hyderabad residential marketplace as a renter or property owner.'}
                 </p>
               </div>
             </div>
+
+            {errorMessage && (
+              <div className="rounded-[2px] border border-crimson/20 bg-crimson/5 p-3 text-xs font-medium text-crimson flex items-center gap-2 animate-in fade-in">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
             {successMessage && (
               <div className="rounded-[2px] border border-verified-border bg-verified-surface p-3 text-xs font-bold text-verified flex items-center gap-2 animate-in fade-in">
@@ -239,80 +269,12 @@ function SignInContent() {
             {/* TAB 1: SIGN IN */}
             {activeTab === 'signin' && (
               <div className="space-y-6">
-                {/* 1-Click Fast Pilot Personas */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-text-muted">
-                      1-Click Pilot Test Personas
-                    </label>
-                    <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[9px] font-mono font-bold text-cobalt border border-border">
-                      INSTANT DEMO
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {FAST_LOGIN_PROFILES.map(profile => {
-                      const isSelected = selectedProfileId === profile.id;
-                      const isProfileAdmin = profile.user.role === 'admin' || profile.user.userType === 'admin';
-                      const isProfileOwner = profile.user.userType === 'owner';
-
-                      return (
-                        <button
-                          key={profile.id}
-                          type="button"
-                          onClick={() => handleFastLogin(profile)}
-                          disabled={isLoading}
-                          className={"w-full text-left p-3 rounded-[2px] border transition-all flex items-center justify-between group " + (
-                            isSelected 
-                              ? "border-cobalt bg-cobalt/5 shadow-sm ring-1 ring-cobalt/20" 
-                              : "border-border bg-white hover:border-midnight hover:bg-surface-subtle"
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={"w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 " + (
-                              isProfileAdmin 
-                                ? "bg-cobalt text-white" 
-                                : isProfileOwner 
-                                ? "bg-midnight text-white" 
-                                : "bg-surface-muted text-midnight border border-border"
-                            )}>
-                              {profile.user.name[0]}
-                            </div>
-                            <div className="space-y-0.5 text-left">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-midnight">{profile.label}</span>
-                                <span className={"text-[9px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.2 rounded " + (
-                                  isProfileAdmin 
-                                    ? "bg-citrus text-midnight" 
-                                    : isProfileOwner 
-                                    ? "bg-surface-muted text-midnight border border-border" 
-                                    : "bg-surface-muted text-text-muted"
-                                )}>
-                                  {isProfileAdmin ? 'ADMIN DESK' : isProfileOwner ? 'OWNER' : 'RENTER'}
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-text-muted line-clamp-1">{profile.roleDescription}</p>
-                            </div>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-text-faint group-hover:text-midnight group-hover:translate-x-0.5 transition-all shrink-0 ml-2" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="relative flex py-1 items-center">
-                  <div className="flex-grow border-t border-border"></div>
-                  <span className="flex-shrink mx-3 text-[10px] font-mono text-text-faint uppercase tracking-wider">or sign in with credentials</span>
-                  <div className="flex-grow border-t border-border"></div>
-                </div>
-
                 {/* Google Sign In */}
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={isGoogleLoading || isLoading}
-                  className="w-full flex items-center justify-center gap-3 rounded-[2px] border border-border bg-white py-2.5 px-4 text-xs font-bold text-midnight hover:bg-surface-muted hover:border-border-strong transition-all focus:outline-none"
+                  className="w-full flex items-center justify-center gap-3 rounded-[2px] border border-border bg-white py-3 px-4 text-xs font-bold text-midnight hover:bg-surface-muted hover:border-border-strong transition-all focus:outline-none shadow-sm"
                 >
                   <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                     <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.4 8.9 5 12 5z" />
@@ -323,11 +285,17 @@ function SignInContent() {
                   <span>{isGoogleLoading ? 'Connecting with Google...' : 'Continue with Google Account'}</span>
                 </button>
 
+                <div className="relative flex py-1 items-center">
+                  <div className="flex-grow border-t border-border"></div>
+                  <span className="flex-shrink mx-3 text-[10px] font-mono text-text-faint uppercase tracking-wider">or sign in with email passcode</span>
+                  <div className="flex-grow border-t border-border"></div>
+                </div>
+
                 {/* Email OTP Form */}
                 {!isOtpSent ? (
                   <form onSubmit={handleSendOtp} className="space-y-3">
                     <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted">
-                      Email Passcode Login
+                      Email Address
                     </label>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
@@ -337,16 +305,16 @@ function SignInContent() {
                           required
                           value={email}
                           onChange={e => setEmail(e.target.value)}
-                          placeholder="name@company.com or email"
-                          className="w-full rounded-[2px] border border-border bg-white pl-9 pr-3 py-2 text-xs font-medium text-midnight placeholder:text-text-faint focus:border-midnight focus:outline-none"
+                          placeholder="name@company.com or personal email"
+                          className="w-full rounded-[2px] border border-border bg-white pl-9 pr-3 py-2.5 text-xs font-medium text-midnight placeholder:text-text-faint focus:border-midnight focus:outline-none"
                         />
                       </div>
                       <button
                         type="submit"
                         disabled={isLoading || !email.trim()}
-                        className="rounded-[2px] bg-midnight px-4 py-2 text-xs font-bold text-white hover:bg-cobalt transition-colors disabled:opacity-50"
+                        className="rounded-[2px] bg-midnight px-4 py-2.5 text-xs font-bold text-white hover:bg-cobalt transition-colors disabled:opacity-50"
                       >
-                        Send OTP
+                        {isLoading ? 'Sending...' : 'Send OTP'}
                       </button>
                     </div>
                   </form>
@@ -354,11 +322,11 @@ function SignInContent() {
                   <form onSubmit={handleVerifyOtp} className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-mono font-bold uppercase text-text-muted">
-                        6-Digit OTP sent to {email}
+                        Enter 6-Digit Passcode
                       </span>
                       <button
                         type="button"
-                        onClick={() => setIsOtpSent(false)}
+                        onClick={() => { setIsOtpSent(false); setErrorMessage(null); }}
                         className="text-[10px] text-cobalt font-bold hover:underline"
                       >
                         Change Email
@@ -371,15 +339,25 @@ function SignInContent() {
                         required
                         value={otp}
                         onChange={e => setOtp(e.target.value)}
-                        placeholder="123456"
-                        className="w-full rounded-[2px] border border-border bg-white px-3 py-2 text-xs font-mono font-bold tracking-widest text-center text-midnight focus:border-midnight focus:outline-none"
+                        placeholder="••••••"
+                        className="w-full rounded-[2px] border border-border bg-white px-3 py-2.5 text-xs font-mono font-bold tracking-widest text-center text-midnight focus:border-midnight focus:outline-none"
                       />
                       <button
                         type="submit"
                         disabled={isLoading || !otp.trim()}
-                        className="rounded-[2px] bg-cobalt px-5 py-2 text-xs font-bold uppercase text-white hover:bg-cobalt-hover transition-colors"
+                        className="rounded-[2px] bg-cobalt px-5 py-2.5 text-xs font-bold uppercase text-white hover:bg-cobalt-hover transition-colors disabled:opacity-50"
                       >
-                        Verify
+                        {isLoading ? 'Verifying...' : 'Verify'}
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        disabled={!canResend || isLoading}
+                        onClick={handleResendOtp}
+                        className="text-[11px] text-text-muted hover:text-midnight disabled:opacity-50"
+                      >
+                        {canResend ? 'Resend Passcode' : `Resend in ${resendCountdown}s`}
                       </button>
                     </div>
                   </form>

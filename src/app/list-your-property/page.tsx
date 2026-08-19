@@ -29,7 +29,7 @@ export default function ListYourPropertyPage() {
                   Start Listing Details <ArrowRight className="h-4 w-4" />
                 </Link>
                 <span className="text-xs text-text-muted font-mono text-center sm:text-left">
-                  Free during the Hyderabad pilot.
+                  Zero brokerage commissions • Direct verified tenants
                 </span>
               </div>
             </div>

@@ -109,11 +109,11 @@ export default function HowItWorksPage() {
           <div className="space-y-4">
             <details className="group rounded-[2px] border border-border bg-white p-6 text-sm [&_summary::-webkit-details-marker]:hidden cursor-pointer shadow-sm">
               <summary className="flex items-center justify-between font-bold text-midnight text-[15px]">
-                <span>Is The Rental Circle free during the pilot?</span>
+                <span>Is The Rental Circle free to use?</span>
                 <span className="transition-transform group-open:rotate-180 text-text-faint font-mono">▼</span>
               </summary>
               <p className="mt-3 text-text-secondary leading-relaxed font-normal text-sm">
-                Yes. During our Hyderabad pilot, The Rental Circle is free for both renters and property owners. We never charge brokerage commissions or unlock fees.
+                Yes. The Rental Circle is free for both renters and property owners. We never charge brokerage commissions, listing fees, or contact unlock charges.
               </p>
             </details>
 
