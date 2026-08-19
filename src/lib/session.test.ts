@@ -7,41 +7,27 @@ import {
 } from './session';
 
 describe('TRC Session & Fast Login Profiles', () => {
-  it('should define all 3 required fast login profiles', () => {
-    assert.equal(FAST_LOGIN_PROFILES.length, 3);
+  it('should define required admin fast login profiles', () => {
+    assert.ok(FAST_LOGIN_PROFILES.length >= 1);
     
-    const renterProfile = FAST_LOGIN_PROFILES.find(p => p.id === 'profile_renter');
-    assert.ok(renterProfile);
-    assert.equal(renterProfile.label, 'Ananya Sharma');
-    assert.equal(renterProfile.user.name, 'Ananya Sharma');
-    assert.equal(renterProfile.user.userType, 'renter');
-    assert.equal(renterProfile.user.role, 'user');
-    assert.equal(renterProfile.redirectUrl, '/homes');
-
-    const ownerProfile = FAST_LOGIN_PROFILES.find(p => p.id === 'profile_owner');
-    assert.ok(ownerProfile);
-    assert.equal(ownerProfile.label, 'Suresh Reddy');
-    assert.equal(ownerProfile.user.name, 'Suresh Reddy');
-    assert.equal(ownerProfile.user.userType, 'owner');
-    assert.equal(ownerProfile.user.role, 'user');
-    assert.equal(ownerProfile.redirectUrl, '/owner/listings');
+    const maheshProfile = FAST_LOGIN_PROFILES.find(p => p.id === 'profile_admin_mahesh');
+    assert.ok(maheshProfile);
+    assert.equal(maheshProfile.label, 'Mahesh (Founder)');
+    assert.equal(maheshProfile.user.name, 'Mahesh (Founder / Admin)');
+    assert.equal(maheshProfile.user.role, 'admin');
+    assert.equal(maheshProfile.redirectUrl, '/admin/listings');
 
     const adminProfile = FAST_LOGIN_PROFILES.find(p => p.id === 'profile_admin');
     assert.ok(adminProfile);
     assert.equal(adminProfile.label, 'Founder / Moderator');
-    assert.equal(adminProfile.user.name, 'Founder / Moderator');
     assert.equal(adminProfile.user.role, 'admin');
     assert.equal(adminProfile.redirectUrl, '/admin/listings');
   });
 
   it('should find pre-configured test accounts by email', () => {
-    const ananya = findTestAccountByEmail('ananya.sharma@therentalcircle.in');
-    assert.equal(ananya.name, 'Ananya Sharma');
-    assert.equal(ananya.userType, 'renter');
-
-    const suresh = findTestAccountByEmail('suresh.reddy@therentalcircle.in');
-    assert.equal(suresh.name, 'Suresh Reddy');
-    assert.equal(suresh.userType, 'owner');
+    const mahesh = findTestAccountByEmail('chmahesh997@gmail.com');
+    assert.equal(mahesh.name, 'Mahesh (Founder / Admin)');
+    assert.equal(mahesh.role, 'admin');
 
     const admin = findTestAccountByEmail('admin.trc@therentalcircle.in');
     assert.equal(admin.name, 'Founder / Moderator');

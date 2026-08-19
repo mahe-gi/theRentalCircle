@@ -22,25 +22,15 @@ export interface FastLoginProfile {
 }
 
 export const TEST_ACCOUNTS: Record<string, SessionUser> = {
-  'ananya.sharma@therentalcircle.in': {
-    id: 'usr_renter_ananya',
-    name: 'Ananya Sharma',
-    email: 'ananya.sharma@therentalcircle.in',
-    role: 'user',
-    userType: 'renter',
-    phone: '+91 98765 43210',
+  'chmahesh997@gmail.com': {
+    id: 'usr_admin_mahesh',
+    name: 'Mahesh (Founder / Admin)',
+    email: 'chmahesh997@gmail.com',
+    role: 'admin',
+    userType: 'admin',
+    phone: '+91 99999 00000',
     phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-  },
-  'suresh.reddy@therentalcircle.in': {
-    id: 'usr_owner_suresh',
-    name: 'Suresh Reddy',
-    email: 'suresh.reddy@therentalcircle.in',
-    role: 'user',
-    userType: 'owner',
-    phone: '+91 98490 12345',
-    phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
   },
   'admin.trc@therentalcircle.in': {
     id: 'usr_admin_trc',
@@ -51,47 +41,6 @@ export const TEST_ACCOUNTS: Record<string, SessionUser> = {
     phone: '+91 99999 00000',
     phoneVerified: true,
     avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
-  },
-  // Aliases for convenience and backward compatibility
-  'kiran.renter@therentalcircle.in': {
-    id: 'usr_renter_ananya',
-    name: 'Ananya Sharma',
-    email: 'ananya.sharma@therentalcircle.in',
-    role: 'user',
-    userType: 'renter',
-    phone: '+91 98765 43210',
-    phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-  },
-  'renter1@therentalcircle.in': {
-    id: 'usr_renter_ananya',
-    name: 'Ananya Sharma',
-    email: 'ananya.sharma@therentalcircle.in',
-    role: 'user',
-    userType: 'renter',
-    phone: '+91 98765 43210',
-    phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-  },
-  'ramesh.owner@therentalcircle.in': {
-    id: 'usr_owner_suresh',
-    name: 'Suresh Reddy',
-    email: 'suresh.reddy@therentalcircle.in',
-    role: 'user',
-    userType: 'owner',
-    phone: '+91 98490 12345',
-    phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-  },
-  'owner1@therentalcircle.in': {
-    id: 'usr_owner_suresh',
-    name: 'Suresh Reddy',
-    email: 'suresh.reddy@therentalcircle.in',
-    role: 'user',
-    userType: 'owner',
-    phone: '+91 98490 12345',
-    phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
   },
   'admin@therentalcircle.in': {
     id: 'usr_admin_trc',
@@ -107,18 +56,11 @@ export const TEST_ACCOUNTS: Record<string, SessionUser> = {
 
 export const FAST_LOGIN_PROFILES: FastLoginProfile[] = [
   {
-    id: 'profile_renter',
-    label: 'Ananya Sharma',
-    roleDescription: 'Renter • Salaried Engineer at Microsoft Gachibowli',
-    user: TEST_ACCOUNTS['ananya.sharma@therentalcircle.in'],
-    redirectUrl: '/homes',
-  },
-  {
-    id: 'profile_owner',
-    label: 'Suresh Reddy',
-    roleDescription: 'Property Owner in Kondapur & Madhapur',
-    user: TEST_ACCOUNTS['suresh.reddy@therentalcircle.in'],
-    redirectUrl: '/owner/listings',
+    id: 'profile_admin_mahesh',
+    label: 'Mahesh (Founder)',
+    roleDescription: 'Platform Founder & Admin Moderation Desk',
+    user: TEST_ACCOUNTS['chmahesh997@gmail.com'],
+    redirectUrl: '/admin/listings',
   },
   {
     id: 'profile_admin',

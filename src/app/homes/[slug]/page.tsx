@@ -24,14 +24,7 @@ import {
 export const dynamicParams = true;
 
 export function generateStaticParams() {
-  return [
-    { slug: '1rk-independent-kondapur-botanical' },
-    { slug: 'private-room-colive-gachibowli' },
-    { slug: '2bhk-semi-furnished-madhapur-ayyyappa' },
-    { slug: '1bhk-manikonda-ou-colony' },
-    { slug: 'shared-room-hitec-city' },
-    { slug: '3bhk-financial-district-narsingi' },
-  ];
+  return [];
 }
 
 const PROPERTY_TYPE_MAP: Record<string, string> = {
