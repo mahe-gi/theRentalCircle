@@ -288,17 +288,41 @@ export function useSession() {
   // 3. If Better Auth has an active user session, map and synchronize it
   useEffect(() => {
     if (betterSession?.user) {
-      const email = betterSession.user.email || '';
-      const isAdmin = betterSession.user.role === 'admin' || email.includes('admin') || email.includes('trc') || email.startsWith('admin@');
-      const isOwner = email.includes('owner');
+      const email = (betterSession.user.email || '').trim().toLowerCase();
+      const existing = getSessionUser();
+      const isAdmin = isAuthorizedAdmin(email) || betterSession.user.role === 'admin';
+
+      // Determine userType from:
+      // 1. Admin whitelist check
+      // 2. Existing persisted session preference if matching same email
+      // 3. URL search params or referrer (?role=owner / redirect=/owner/...)
+      // 4. Fallback to owner if email contains owner, otherwise preserve existing or default to renter
+      let resolvedType: 'renter' | 'owner' | 'admin' = 'renter';
+      if (isAdmin) {
+        resolvedType = 'admin';
+      } else if (existing && existing.email.toLowerCase() === email && existing.userType) {
+        resolvedType = existing.userType;
+      } else if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const roleParam = urlParams.get('role');
+        const redirectParam = urlParams.get('redirect') || '';
+        if (roleParam === 'owner' || redirectParam.includes('/owner')) {
+          resolvedType = 'owner';
+        } else if (roleParam === 'renter') {
+          resolvedType = 'renter';
+        } else if (email.includes('owner')) {
+          resolvedType = 'owner';
+        }
+      }
 
       const mappedUser: SessionUser = {
         id: betterSession.user.id,
         name: betterSession.user.name || (email ? email.split('@')[0] : 'Verified User'),
         email: email,
         role: isAdmin ? 'admin' : 'user',
-        userType: isAdmin ? 'admin' : isOwner ? 'owner' : 'renter',
-        avatarUrl: betterSession.user.image || undefined,
+        userType: resolvedType,
+        avatarUrl: betterSession.user.image || existing?.avatarUrl || undefined,
+        phone: existing?.phone || '+91 98000 00000',
         phoneVerified: true,
       };
 
@@ -307,15 +331,15 @@ export function useSession() {
     }
   }, [betterSession]);
 
-  const activeUser = betterSession?.user ? {
+  const activeUser = localSession || (betterSession?.user ? {
     id: betterSession.user.id,
     name: betterSession.user.name || betterSession.user.email.split('@')[0],
     email: betterSession.user.email,
-    role: (betterSession.user.role === 'admin' || betterSession.user.email.includes('admin') || betterSession.user.email.includes('trc')) ? 'admin' : 'user',
-    userType: (betterSession.user.role === 'admin' || betterSession.user.email.includes('admin') || betterSession.user.email.includes('trc')) ? 'admin' : betterSession.user.email.includes('owner') ? 'owner' : 'renter',
+    role: isAuthorizedAdmin(betterSession.user.email) ? 'admin' : 'user',
+    userType: isAuthorizedAdmin(betterSession.user.email) ? 'admin' : 'renter',
     avatarUrl: betterSession.user.image,
     phoneVerified: true,
-  } as SessionUser : localSession;
+  } as SessionUser : null);
 
   const isLoading = isBetterPending && isLocalLoading;
 

@@ -14,7 +14,7 @@ export function getAuth(d1?: any, requestOrigin?: string, env?: any) {
     return authCache.get(cacheKey)!;
   }
 
-  const db = d1 ? getDb(d1) : undefined;
+  const db = getDb(d1);
   const secret = env?.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET || '381671bd7d7e64c78fa9955bfaf55ad1dd31340c80a09aaecaabbefcc5fe09b7';
   const googleClientId = env?.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || 'mock-google-client-id';
   const googleClientSecret = env?.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || 'mock-google-client-secret';

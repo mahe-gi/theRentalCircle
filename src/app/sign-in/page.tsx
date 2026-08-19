@@ -28,6 +28,7 @@ function SignInContent() {
   const [activeTab, setActiveTab] = useState<'signin' | 'register'>('signin');
 
   // Sign In form states
+  const [loginRole, setLoginRole] = useState<'renter' | 'owner'>('renter');
   const [email, setEmail] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
@@ -46,8 +47,15 @@ function SignInContent() {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
+    const roleParam = searchParams.get('role');
+    const redirectParam = searchParams.get('redirect');
+
     if (tabParam === 'register') {
       setActiveTab('register');
+    }
+    if (roleParam === 'owner' || (redirectParam && redirectParam.includes('/owner'))) {
+      setLoginRole('owner');
+      setRegUserType('owner');
     }
   }, [searchParams]);
 
@@ -89,10 +97,13 @@ function SignInContent() {
     setIsGoogleLoading(true);
     setErrorMessage(null);
     try {
-      const redirectParam = searchParams.get('redirect');
+      const chosenRole = loginRole;
+      const redirectParam = searchParams.get('redirect') || (chosenRole === 'owner' ? '/owner/listings' : '/homes');
+      const separator = redirectParam.includes('?') ? '&' : '?';
+      const targetPath = `${redirectParam}${separator}role=${chosenRole}`;
       const callbackURL = typeof window !== 'undefined'
-        ? (window.location.origin + (redirectParam || '/homes'))
-        : '/homes';
+        ? `${window.location.origin}${targetPath}`
+        : targetPath;
 
       const res = await signIn.social({
         provider: 'google',
@@ -278,6 +289,39 @@ function SignInContent() {
             {/* TAB 1: SIGN IN */}
             {activeTab === 'signin' && (
               <div className="space-y-6">
+                {/* Role Selector */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-mono font-bold uppercase tracking-wider text-text-muted block">
+                    Signing in as:
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setLoginRole('renter')}
+                      className={`flex items-center justify-center gap-2 p-2.5 rounded-[2px] border text-xs font-bold transition-all ${
+                        loginRole === 'renter'
+                          ? 'border-cobalt bg-cobalt-subtle text-cobalt shadow-sm'
+                          : 'border-border bg-white text-text-muted hover:text-midnight'
+                      }`}
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                      <span>Renter (Find Homes)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLoginRole('owner')}
+                      className={`flex items-center justify-center gap-2 p-2.5 rounded-[2px] border text-xs font-bold transition-all ${
+                        loginRole === 'owner'
+                          ? 'border-cobalt bg-cobalt-subtle text-cobalt shadow-sm'
+                          : 'border-border bg-white text-text-muted hover:text-midnight'
+                      }`}
+                    >
+                      <Building2 className="h-3.5 w-3.5" />
+                      <span>Property Owner</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Google Sign In */}
                 <button
                   type="button"
