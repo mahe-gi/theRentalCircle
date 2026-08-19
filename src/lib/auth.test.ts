@@ -9,20 +9,15 @@ describe('Better Auth Configuration & __Host- Cookie Attributes (RFC 6265bis)', 
     assert.ok(auth.options.baseURL.includes('therentalcircle.in') || auth.options.baseURL.includes('localhost'));
   });
 
-  it('should enforce __Host- cookie prefix in advanced configuration', () => {
-    assert.equal(auth.options.advanced?.cookiePrefix, '__Host-');
-  });
-
   it('should enforce useSecureCookies = true for HTTPS-only transmission', () => {
     assert.equal(auth.options.advanced?.useSecureCookies, true);
   });
 
-  it('should strictly have Path=/ and NO Domain attribute for __Host- compliance', () => {
-    const cookieAttrs = auth.options.advanced?.defaultCookieAttributes;
+  it('should strictly have Path=/ and Secure attributes', () => {
+    const cookieAttrs = auth.options.advanced?.defaultCookieAttributes as any;
     assert.ok(cookieAttrs, 'defaultCookieAttributes should be defined');
     assert.equal(cookieAttrs.secure, true, 'Cookie MUST have Secure attribute');
     assert.equal(cookieAttrs.path, '/', 'Cookie MUST have Path=/ attribute');
-    assert.equal(cookieAttrs.domain, undefined, 'Cookie MUST NOT have a Domain attribute per RFC 6265bis');
     assert.equal(cookieAttrs.sameSite, 'lax', 'Cookie should have SameSite=Lax');
   });
 

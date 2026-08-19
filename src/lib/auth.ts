@@ -3,12 +3,15 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getDb } from '@/db';
 import * as schema from '@/db/schema';
 
-export function getAuth(d1?: any, requestOrigin?: string) {
+export function getAuth(d1?: any, requestOrigin?: string, env?: any) {
   const db = d1 ? getDb(d1) : undefined;
-  const baseURL = process.env.BETTER_AUTH_URL || requestOrigin || 'https://therentalcircle.in';
-  
+  const baseURL = env?.BETTER_AUTH_URL || process.env.BETTER_AUTH_URL || requestOrigin || 'https://therentalcircle.in';
+  const secret = env?.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET || '381671bd7d7e64c78fa9955bfaf55ad1dd31340c80a09aaecaabbefcc5fe09b7';
+  const googleClientId = env?.GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || 'mock-google-client-id';
+  const googleClientSecret = env?.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || 'mock-google-client-secret';
+
   return betterAuth({
-    secret: process.env.BETTER_AUTH_SECRET || '381671bd7d7e64c78fa9955bfaf55ad1dd31340c80a09aaecaabbefcc5fe09b7',
+    secret,
     baseURL,
     basePath: '/api/auth',
     trustedOrigins: [
@@ -29,8 +32,8 @@ export function getAuth(d1?: any, requestOrigin?: string) {
     }) : undefined,
     socialProviders: {
       google: {
-        clientId: process.env.GOOGLE_CLIENT_ID || 'mock-client-id',
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock-client-secret',
+        clientId: googleClientId,
+        clientSecret: googleClientSecret,
       },
     },
     emailAndPassword: {
@@ -43,13 +46,11 @@ export function getAuth(d1?: any, requestOrigin?: string) {
       },
     },
     advanced: {
-      cookiePrefix: '__Host-',
       useSecureCookies: true,
       defaultCookieAttributes: {
         secure: true,
         sameSite: 'lax',
         path: '/',
-        domain: undefined, // Strictly NO domain attribute per RFC 6265bis for __Host- cookies
       },
     },
     user: {
