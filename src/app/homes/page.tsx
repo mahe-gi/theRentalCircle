@@ -1,0 +1,332 @@
+'use client';
+
+import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Filter, RotateCcw, ShieldCheck, CheckCircle2, SlidersHorizontal, ArrowUpRight } from 'lucide-react';
+import { ListingCard } from '@/components/listings/ListingCard';
+
+interface HomeItem {
+  slug: string;
+  title: string;
+  cluster: string;
+  propertyType: string;
+  monthlyRent: number;
+  maintenanceCharges: number;
+  carpetAreaSqFt: number;
+  coverImageUrl: string;
+  hasConnectionEvidence: boolean;
+  isContactConfirmed: boolean;
+  confirmedDate: string;
+  corridor: string;
+  furnishing: string;
+}
+
+const SAMPLE_HOMES: HomeItem[] = [
+  {
+    slug: '1rk-independent-kondapur-botanical',
+    title: '1 RK Independent Unit near Botanical Garden',
+    cluster: 'Kondapur, Hyderabad',
+    propertyType: '1 RK Unit',
+    monthlyRent: 12000,
+    maintenanceCharges: 1000,
+    carpetAreaSqFt: 380,
+    coverImageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80',
+    hasConnectionEvidence: true,
+    isContactConfirmed: true,
+    confirmedDate: 'Aug 18, 2026',
+    corridor: 'kondapur',
+    furnishing: 'semi_furnished',
+  },
+  {
+    slug: '2bhk-semi-furnished-madhapur-ayyyappa',
+    title: '2 BHK Semi-Furnished near Ayyappa Society',
+    cluster: 'Madhapur, Hyderabad',
+    propertyType: '2 BHK Apartment',
+    monthlyRent: 26000,
+    maintenanceCharges: 2500,
+    carpetAreaSqFt: 1150,
+    coverImageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80',
+    hasConnectionEvidence: true,
+    isContactConfirmed: true,
+    confirmedDate: 'Aug 19, 2026',
+    corridor: 'madhapur',
+    furnishing: 'semi_furnished',
+  },
+  {
+    slug: 'private-room-colive-gachibowli',
+    title: 'Private Room in Standalone Residential Building',
+    cluster: 'Gachibowli, Hyderabad',
+    propertyType: 'Private Room',
+    monthlyRent: 8500,
+    maintenanceCharges: 0,
+    carpetAreaSqFt: 220,
+    coverImageUrl: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=1000&q=80',
+    hasConnectionEvidence: true,
+    isContactConfirmed: true,
+    confirmedDate: 'Aug 17, 2026',
+    corridor: 'gachibowli',
+    furnishing: 'fully_furnished',
+  },
+  {
+    slug: '1bhk-manikonda-ou-colony',
+    title: '1 BHK Standalone Floor near OU Colony',
+    cluster: 'Manikonda, Hyderabad',
+    propertyType: '1 BHK Apartment',
+    monthlyRent: 15000,
+    maintenanceCharges: 1200,
+    carpetAreaSqFt: 580,
+    coverImageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
+    hasConnectionEvidence: true,
+    isContactConfirmed: true,
+    confirmedDate: 'Aug 16, 2026',
+    corridor: 'manikonda',
+    furnishing: 'semi_furnished',
+  },
+  {
+    slug: '3bhk-financial-district-narsingi',
+    title: '3 BHK Gated Residence near Financial District',
+    cluster: 'Narsingi, Hyderabad',
+    propertyType: '3 BHK Apartment',
+    monthlyRent: 42000,
+    maintenanceCharges: 4000,
+    carpetAreaSqFt: 1850,
+    coverImageUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1000&q=80',
+    hasConnectionEvidence: true,
+    isContactConfirmed: true,
+    confirmedDate: 'Aug 15, 2026',
+    corridor: 'financial_district',
+    furnishing: 'unfurnished',
+  },
+  {
+    slug: 'shared-room-hitec-city',
+    title: 'Dedicated Bedspace in 2 BHK Coliving Floor',
+    cluster: 'HITEC City, Hyderabad',
+    propertyType: 'Shared Room',
+    monthlyRent: 6000,
+    maintenanceCharges: 500,
+    carpetAreaSqFt: 180,
+    coverImageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80',
+    hasConnectionEvidence: true,
+    isContactConfirmed: true,
+    confirmedDate: 'Aug 14, 2026',
+    corridor: 'hitec_city',
+    furnishing: 'fully_furnished',
+  },
+];
+
+function BrowseHomesContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [selectedCorridors, setSelectedCorridors] = useState<string[]>([]);
+  const [maxRent, setMaxRent] = useState<number>(50000);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
+
+  // Sync state from URL query parameters (e.g. ?cluster=kondapur or ?q=Botanical)
+  useEffect(() => {
+    const clusterParam = searchParams.get('cluster') || searchParams.get('corridor');
+    const qParam = searchParams.get('q') || searchParams.get('query') || searchParams.get('search');
+    const maxRentParam = searchParams.get('maxRent');
+
+    if (clusterParam) {
+      const normalized = clusterParam.toLowerCase().trim();
+      setSelectedCorridors([normalized]);
+    } else {
+      setSelectedCorridors([]);
+    }
+
+    if (qParam) {
+      setSearchQuery(qParam);
+    } else {
+      setSearchQuery('');
+    }
+
+    if (maxRentParam) {
+      const parsed = parseInt(maxRentParam, 10);
+      if (!isNaN(parsed)) setMaxRent(parsed);
+    }
+  }, [searchParams]);
+
+  const toggleCorridor = (c: string) => {
+    setSelectedCorridors(prev =>
+      prev.includes(c) ? prev.filter(item => item !== c) : [...prev, c]
+    );
+  };
+
+  const resetFilters = () => {
+    setSelectedCorridors([]);
+    setMaxRent(50000);
+    setSearchQuery('');
+    router.push('/homes');
+  };
+
+  const filteredHomes = SAMPLE_HOMES.filter(home => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matches =
+        home.title.toLowerCase().includes(q) ||
+        home.cluster.toLowerCase().includes(q) ||
+        home.corridor.toLowerCase().includes(q) ||
+        home.propertyType.toLowerCase().includes(q);
+      if (!matches) return false;
+    }
+    if (selectedCorridors.length > 0 && !selectedCorridors.includes(home.corridor)) {
+      return false;
+    }
+    if (home.monthlyRent > maxRent) {
+      return false;
+    }
+    return true;
+  });
+
+  return (
+    <div className="min-h-screen bg-canvas text-midnight font-sans antialiased selection:bg-cobalt selection:text-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+        {/* Header & Search Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border pb-6">
+          <div className="space-y-1 text-left">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-cobalt font-mono">Hyderabad Inventory</span>
+              <span className="text-border-strong">•</span>
+              <span className="text-xs font-medium text-text-muted font-mono">{filteredHomes.length} reviewed available</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-midnight">
+              Reviewed Homes
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-faint" />
+              <input
+                type="text"
+                placeholder="Filter by locality or colony..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full rounded-[2px] border border-border-strong bg-white pl-10 pr-3.5 py-2.5 text-xs font-medium text-midnight placeholder:text-text-faint focus:border-midnight focus:outline-none shadow-sm transition-colors"
+              />
+            </div>
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="md:hidden inline-flex items-center gap-1.5 rounded-[2px] border border-border-strong bg-white px-4 py-2.5 text-xs font-bold text-midnight shadow-sm"
+            >
+              <SlidersHorizontal className="h-4 w-4" /> Filters
+            </button>
+          </div>
+        </div>
+
+        {/* Main 2-Column Responsive Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          {/* Left Sidebar Filter Rail (Desktop) */}
+          <aside className="hidden md:block md:col-span-4 lg:col-span-3 sticky top-24 space-y-6 rounded-[2px] border border-border bg-white p-6 shadow-sm text-left">
+            <div className="flex items-center justify-between border-b border-border-subtle pb-4">
+              <span className="text-xs font-black uppercase tracking-wider text-midnight flex items-center gap-2 font-mono">
+                <Filter className="h-3.5 w-3.5 text-cobalt" /> Filter Parameters
+              </span>
+              <button
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-text-muted hover:text-midnight transition-colors"
+              >
+                <RotateCcw className="h-3 w-3" /> Reset
+              </button>
+            </div>
+
+            {/* Corridor Filters */}
+            <fieldset className="space-y-3">
+              <legend className="text-[11px] font-bold uppercase tracking-wider text-text-faint font-mono">
+                Hyderabad Corridors
+              </legend>
+              <div className="space-y-2.5 text-xs text-text-secondary font-medium">
+                {[
+                  { id: 'kondapur', label: 'Kondapur' },
+                  { id: 'madhapur', label: 'Madhapur' },
+                  { id: 'gachibowli', label: 'Gachibowli' },
+                  { id: 'hitec_city', label: 'HITEC City' },
+                  { id: 'manikonda', label: 'Manikonda' },
+                  { id: 'financial_district', label: 'Financial District' },
+                ].map(c => (
+                  <label key={c.id} className="flex items-center gap-2.5 cursor-pointer hover:text-midnight select-none group">
+                    <input
+                      type="checkbox"
+                      checked={selectedCorridors.includes(c.id)}
+                      onChange={() => toggleCorridor(c.id)}
+                      className="h-4 w-4 rounded-[2px] border-border-strong text-cobalt focus:ring-cobalt cursor-pointer"
+                    />
+                    <span className="group-hover:text-midnight transition-colors">{c.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            {/* Budget Filter */}
+            <fieldset className="space-y-3 border-t border-border-subtle pt-4">
+              <div className="flex items-center justify-between text-xs">
+                <legend className="font-bold uppercase tracking-wider text-text-faint font-mono text-[11px]">Max Monthly Rent</legend>
+                <span className="text-midnight tabular-nums font-black text-sm">₹{maxRent.toLocaleString('en-IN')}</span>
+              </div>
+              <input
+                type="range"
+                min="5000"
+                max="50000"
+                step="2500"
+                value={maxRent}
+                onChange={e => setMaxRent(Number(e.target.value))}
+                className="w-full accent-midnight cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-text-faint font-mono tabular-nums">
+                <span>₹5,000</span>
+                <span>₹50,000+</span>
+              </div>
+            </fieldset>
+
+            {/* Verified Checks Guarantee Scope Note */}
+            <div className="border-t border-border-subtle pt-4 text-[11px] text-text-muted space-y-1 leading-relaxed">
+              <span className="font-bold text-midnight block uppercase font-mono text-[10px]">Review Scope</span>
+              <p>Every listed property has a confirmed phone contact and verified utility connection evidence.</p>
+            </div>
+          </aside>
+
+          {/* Right Results Grid */}
+          <main className="md:col-span-8 lg:col-span-9">
+            {filteredHomes.length === 0 ? (
+              <div className="rounded-[2px] border border-border bg-white p-14 text-center space-y-4 shadow-sm">
+                <h3 className="text-lg font-bold text-midnight">No homes match these filters yet.</h3>
+                <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed">
+                  Try selecting a nearby locality or adjusting your budget slider to see available reviewed homes.
+                </p>
+                <button
+                  onClick={resetFilters}
+                  className="inline-flex items-center justify-center rounded-[2px] bg-midnight px-5 py-2.5 text-xs font-bold text-white hover:bg-cobalt transition-colors shadow-sm"
+                >
+                  Reset all filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredHomes.map(home => (
+                  <ListingCard key={home.slug} {...home} />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function BrowseHomesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-canvas flex items-center justify-center">
+          <div className="h-6 w-6 border-2 border-cobalt border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <BrowseHomesContent />
+    </Suspense>
+  );
+}
