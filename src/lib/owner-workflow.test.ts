@@ -64,8 +64,8 @@ describe('Owner Workflow Integration & State Transitions', () => {
 
   it('should fetch owner portfolio and attach applicant request counts', () => {
     const store = getDataStore();
-    const ownerListings = store.getOwnerListings();
-    assert.ok(ownerListings.length >= 3);
+    const ownerListings = store.getOwnerListings('usr_owner_01');
+    assert.ok(ownerListings.length >= 1);
 
     const targetListing = ownerListings[0];
     const requests = store.getListingRequests(targetListing.id);
@@ -74,7 +74,8 @@ describe('Owner Workflow Integration & State Transitions', () => {
 
   it('should reconfirm listing availability and refresh confirmation timestamp', () => {
     const store = getDataStore();
-    const listingId = 'listing-hyd-01';
+    const ownerListings = store.getOwnerListings('usr_owner_01');
+    const listingId = ownerListings[0].id;
     const beforeListing = store.getListingById(listingId);
     assert.ok(beforeListing);
 
@@ -89,10 +90,12 @@ describe('Owner Workflow Integration & State Transitions', () => {
 
   it('should process accept application and unlock mutual contact information', () => {
     const store = getDataStore();
+    const ownerListings = store.getOwnerListings('usr_owner_01');
+    const listingId = ownerListings[0].id;
     
     // Create a new fresh request
     const newReq = store.createRequest({
-      listingId: 'listing-hyd-01',
+      listingId,
       renterId: 'usr_renter_candidate',
       renterName: 'Pooja Verma',
       renterPhone: '+919988776655',
@@ -118,9 +121,11 @@ describe('Owner Workflow Integration & State Transitions', () => {
 
   it('should decline an application with specified decline reason', () => {
     const store = getDataStore();
+    const ownerListings = store.getOwnerListings('usr_owner_01');
+    const listingId = ownerListings[0].id;
 
     const newReq = store.createRequest({
-      listingId: 'listing-hyd-01',
+      listingId,
       renterId: 'usr_renter_decline_test',
       renterName: 'Rohan Joshi',
       renterPhone: '+919876500000',

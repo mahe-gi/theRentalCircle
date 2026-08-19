@@ -121,12 +121,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const generatedRenterId = renterId || `usr_${Date.now()}`;
     const newRequest = store.createRequest({
       listingId: targetListing.id,
-      renterId: renterId || 'renter-ananya-01',
-      renterName: renterName || 'Ananya Sharma',
+      renterId: generatedRenterId,
+      renterName: renterName || 'Prospective Renter',
       renterPhone: canonicalPhone,
-      renterEmail: renterEmail || 'renter1@therentalcircle.in',
+      renterEmail: renterEmail || 'renter@therentalcircle.in',
       intendedMoveInDate,
       rentalDurationMonths,
       occupantsCount,
@@ -140,7 +141,7 @@ export async function POST(req: NextRequest) {
       await createRentalRequest({
         id: newRequest.id,
         listingId: targetListing.id,
-        renterId: renterId || 'usr_renter_1',
+        renterId: generatedRenterId,
         intendedMoveInDate: new Date(intendedMoveInDate),
         rentalDurationMonths,
         occupantsCount,
