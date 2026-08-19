@@ -3,18 +3,20 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { getDb } from '@/db';
 import * as schema from '@/db/schema';
 
-export function getAuth(d1?: any) {
+export function getAuth(d1?: any, requestOrigin?: string) {
   const db = d1 ? getDb(d1) : undefined;
+  const baseURL = process.env.BETTER_AUTH_URL || requestOrigin || 'https://therentalcircle.in';
   
   return betterAuth({
     secret: process.env.BETTER_AUTH_SECRET || '381671bd7d7e64c78fa9955bfaf55ad1dd31340c80a09aaecaabbefcc5fe09b7',
-    baseURL: process.env.BETTER_AUTH_URL || 'https://therentalcircle.in',
+    baseURL,
     basePath: '/api/auth',
     trustedOrigins: [
       'https://therentalcircle.in',
       'https://www.therentalcircle.in',
       'https://therentalcircle.chmahesh997.workers.dev',
       'http://localhost:3000',
+      ...(requestOrigin ? [requestOrigin] : []),
     ],
     database: db ? drizzleAdapter(db, {
       provider: 'sqlite',
