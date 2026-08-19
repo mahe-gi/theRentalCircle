@@ -16,12 +16,14 @@ import {
 import { authClient, signIn } from '@/lib/auth-client';
 import { 
   setSessionUser, 
+  useSession,
   type SessionUser
 } from '@/lib/session';
 
 function SignInContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user: currentSession } = useSession();
 
   const [activeTab, setActiveTab] = useState<'signin' | 'register'>('signin');
 
@@ -75,6 +77,13 @@ function SignInContent() {
     }
     return '/homes';
   };
+
+  useEffect(() => {
+    if (currentSession) {
+      const target = getRedirectUrlForUser(currentSession.userType || 'renter', currentSession.role);
+      router.push(target);
+    }
+  }, [currentSession]);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);

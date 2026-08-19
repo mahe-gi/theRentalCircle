@@ -212,34 +212,92 @@ export function findTestAccountByEmail(email: string): SessionUser {
 }
 
 /**
- * Custom React hook to consume TRC session state with reactive event updates
+ * Custom React hook to consume TRC session state with reactive Better Auth and event updates
  */
 export function useSession() {
-  const [session, setSession] = useState<SessionUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [localSession, setLocalSession] = useState<SessionUser | null>(null);
+  const [isLocalLoading, setIsLocalLoading] = useState(true);
 
+  // 1. Better Auth Client reactive hook
+  let betterSession: any = null;
+  let isBetterPending = false;
+  try {
+    const { authClient } = require('./auth-client');
+    const result = authClient.useSession();
+    betterSession = result?.data;
+    isBetterPending = result?.isPending ?? false;
+  } catch {
+    // In environments without React context, graceful fallback
+  }
+
+  // 2. Sync and resolve active session
   useEffect(() => {
-    const updateSession = () => {
-      setSession(getSessionUser());
-      setIsLoading(false);
+    const updateLocalSession = () => {
+      setLocalSession(getSessionUser());
+      setIsLocalLoading(false);
     };
 
-    updateSession();
+    updateLocalSession();
 
-    window.addEventListener('trc_session_change', updateSession);
-    window.addEventListener('storage', updateSession);
+    window.addEventListener('trc_session_change', updateLocalSession);
+    window.addEventListener('storage', updateLocalSession);
 
     return () => {
-      window.removeEventListener('trc_session_change', updateSession);
-      window.removeEventListener('storage', updateSession);
+      window.removeEventListener('trc_session_change', updateLocalSession);
+      window.removeEventListener('storage', updateLocalSession);
     };
   }, []);
 
+  // 3. If Better Auth has an active user session, map and synchronize it
+  useEffect(() => {
+    if (betterSession?.user) {
+      const email = betterSession.user.email || '';
+      const isAdmin = betterSession.user.role === 'admin' || email.includes('admin') || email.includes('trc') || email.startsWith('admin@');
+      const isOwner = email.includes('owner');
+
+      const mappedUser: SessionUser = {
+        id: betterSession.user.id,
+        name: betterSession.user.name || (email ? email.split('@')[0] : 'Verified User'),
+        email: email,
+        role: isAdmin ? 'admin' : 'user',
+        userType: isAdmin ? 'admin' : isOwner ? 'owner' : 'renter',
+        avatarUrl: betterSession.user.image || undefined,
+        phoneVerified: true,
+      };
+
+      setSessionUser(mappedUser);
+      setLocalSession(mappedUser);
+    }
+  }, [betterSession]);
+
+  const activeUser = betterSession?.user ? {
+    id: betterSession.user.id,
+    name: betterSession.user.name || betterSession.user.email.split('@')[0],
+    email: betterSession.user.email,
+    role: (betterSession.user.role === 'admin' || betterSession.user.email.includes('admin') || betterSession.user.email.includes('trc')) ? 'admin' : 'user',
+    userType: (betterSession.user.role === 'admin' || betterSession.user.email.includes('admin') || betterSession.user.email.includes('trc')) ? 'admin' : betterSession.user.email.includes('owner') ? 'owner' : 'renter',
+    avatarUrl: betterSession.user.image,
+    phoneVerified: true,
+  } as SessionUser : localSession;
+
+  const isLoading = isBetterPending && isLocalLoading;
+
+  const handleSignOut = async () => {
+    try {
+      const { authClient } = require('./auth-client');
+      await authClient.signOut();
+    } catch {
+      // ignore
+    }
+    clearSessionUser();
+    setLocalSession(null);
+  };
+
   return {
-    data: session ? { user: session } : null,
-    user: session,
+    data: activeUser ? { user: activeUser } : null,
+    user: activeUser,
     isLoading,
-    status: (isLoading ? 'loading' : session ? 'authenticated' : 'unauthenticated') as 'loading' | 'authenticated' | 'unauthenticated',
-    signOut: clearSessionUser,
+    status: (isLoading ? 'loading' : activeUser ? 'authenticated' : 'unauthenticated') as 'loading' | 'authenticated' | 'unauthenticated',
+    signOut: handleSignOut,
   };
 }
