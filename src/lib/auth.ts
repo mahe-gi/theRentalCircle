@@ -7,7 +7,7 @@ export function getAuth(d1?: any) {
   const db = d1 ? getDb(d1) : undefined;
   
   return betterAuth({
-    baseURL: process.env.BETTER_AUTH_URL || 'https://app.therentalcircle.in',
+    baseURL: process.env.BETTER_AUTH_URL || 'https://therentalcircle.in',
     basePath: '/api/auth',
     database: db ? drizzleAdapter(db, {
       provider: 'sqlite',

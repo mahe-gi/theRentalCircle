@@ -5,8 +5,8 @@ import { getAuth } from './auth';
 describe('Better Auth Configuration & __Host- Cookie Attributes (RFC 6265bis)', () => {
   const auth = getAuth();
 
-  it('should configure baseURL to app.therentalcircle.in by default', () => {
-    assert.ok(auth.options.baseURL.includes('app.therentalcircle.in') || auth.options.baseURL.includes('localhost'));
+  it('should configure baseURL to therentalcircle.in by default', () => {
+    assert.ok(auth.options.baseURL.includes('therentalcircle.in') || auth.options.baseURL.includes('localhost'));
   });
 
   it('should enforce __Host- cookie prefix in advanced configuration', () => {

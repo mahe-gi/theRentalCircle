@@ -3,7 +3,7 @@ import { emailOTPClient, inferAdditionalFields } from 'better-auth/client/plugin
 import type { getAuth } from './auth';
 
 export const authClient = createAuthClient({
-  baseURL: typeof window !== 'undefined' ? window.location.origin : 'https://app.therentalcircle.in',
+  baseURL: typeof window !== 'undefined' ? window.location.origin : 'https://therentalcircle.in',
   plugins: [
     emailOTPClient(),
     inferAdditionalFields<ReturnType<typeof getAuth>>(),

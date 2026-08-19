@@ -10,21 +10,12 @@ export interface RouteResolution {
 export function resolveHostRouting(hostname: string, pathname: string): RouteResolution {
   const host = hostname.toLowerCase().split(':')[0]; // strip port
 
-  // 1. WWW redirect to Apex (Permanent 301)
-  if (host === 'www.therentalcircle.in') {
-    return {
-      type: 'redirect',
-      location: `https://therentalcircle.in${pathname}`,
-      statusCode: 301,
-    };
-  }
-
-  // 2. Media domain: Only allowed for image asset requests or health
+  // 1. Media domain: Only allowed for image asset requests or health
   if (host === 'media.therentalcircle.in') {
     if (pathname.startsWith('/api/') || pathname === '/' || pathname === '/favicon.ico') {
       return { type: 'allow' };
     }
-    // Block non-media page loads on media domain
+    // Redirect non-media page loads on media domain
     return {
       type: 'redirect',
       location: 'https://therentalcircle.in',
@@ -32,26 +23,7 @@ export function resolveHostRouting(hostname: string, pathname: string): RouteRes
     };
   }
 
-  // 3. Marketing Apex: therentalcircle.in
-  if (host === 'therentalcircle.in') {
-    // If accessing auth, app-specific dashboard/admin routes directly, redirect to app domain
-    const appOnlyRoutes = ['/sign-in', '/owner', '/requests', '/admin'];
-    if (appOnlyRoutes.some(route => pathname.startsWith(route))) {
-      return {
-        type: 'redirect',
-        location: `https://app.therentalcircle.in${pathname}`,
-        statusCode: 307,
-      };
-    }
-    return { type: 'allow' };
-  }
-
-  // 4. App domain: app.therentalcircle.in
-  if (host === 'app.therentalcircle.in') {
-    return { type: 'allow' };
-  }
-
-  // 5. Development & Preview environments (localhost, workers.dev, 127.0.0.1)
+  // 2. Production apex, www, app subdomain, and preview/dev environments: All allow direct unified routing
   return { type: 'allow' };
 }
 
