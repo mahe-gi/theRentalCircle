@@ -13,8 +13,8 @@ const CreateRequestSchema = z.object({
   employmentCategory: z.enum(['salaried', 'self_employed', 'student', 'other']),
   phone: z.string().min(10, 'Valid phone number is required'),
   optionalIntroduction: z.string().max(1000).optional(),
-  renterName: z.string().optional().default('Prospective Renter'),
-  renterEmail: z.string().email().optional().default('renter@example.com'),
+  renterName: z.string().min(1, 'Renter name is required'),
+  renterEmail: z.string().email('Valid renter email is required'),
   renterId: z.string().optional(),
 });
 
@@ -125,9 +125,9 @@ export async function POST(req: NextRequest) {
     const newRequest = store.createRequest({
       listingId: targetListing.id,
       renterId: generatedRenterId,
-      renterName: renterName || 'Prospective Renter',
+      renterName,
       renterPhone: canonicalPhone,
-      renterEmail: renterEmail || 'renter@therentalcircle.in',
+      renterEmail,
       intendedMoveInDate,
       rentalDurationMonths,
       occupantsCount,
@@ -136,12 +136,15 @@ export async function POST(req: NextRequest) {
       optionalIntroduction,
     });
 
-    // Also synchronize with DB queries mock repository
+    // Also synchronize with DB queries repository
     try {
       await createRentalRequest({
         id: newRequest.id,
         listingId: targetListing.id,
         renterId: generatedRenterId,
+        renterName,
+        renterPhone: canonicalPhone,
+        renterEmail,
         intendedMoveInDate: new Date(intendedMoveInDate),
         rentalDurationMonths,
         occupantsCount,

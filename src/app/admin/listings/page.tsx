@@ -457,11 +457,11 @@ export default function AdminModerationQueuePage() {
                                 }`}
                               ></span>
                               <span className="text-[11px] font-mono font-bold text-midnight">
-                                {listing.utilityEvidence.provider.split(' ')[0]}
+                                {listing.utilityEvidence?.provider ? listing.utilityEvidence.provider.split(' ')[0] : 'Phone Check'}
                               </span>
                             </div>
                             <p className="text-[10px] font-mono text-text-muted truncate">
-                              USCNO: {listing.utilityEvidence.consumerNumber.split(' ')[0]}
+                              {listing.utilityEvidence?.consumerNumber ? `USCNO: ${listing.utilityEvidence.consumerNumber.split(' ')[0]}` : 'Handshake Pending'}
                             </p>
                           </div>
                         </td>

@@ -28,7 +28,7 @@ export function ListingCard({
   coverImageUrl,
   hasConnectionEvidence = true,
   isContactConfirmed = true,
-  confirmedDate = 'Aug 18, 2026',
+  confirmedDate,
 }: ListingCardProps) {
   return (
     <Link

@@ -126,27 +126,9 @@ export default async function ListingDetailsPage({
     : 2;
 
   // Media
-  const photos = listing.media && listing.media.length > 0
-    ? listing.media
-    : [
-        {
-          id: 'med_default',
-          listingId: listing.id,
-          approvedR2Key: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80',
-          roomTag: 'main_room' as const,
-          caption: 'Property Living Area',
-          displayOrder: 0,
-          isCover: true,
-          isApproved: true,
-          width: 1200,
-          height: 800,
-          sizeBytes: 150000,
-          createdAt: new Date(),
-        },
-      ];
-
-  const coverPhoto = photos.find(p => p.isCover) || photos[0];
-  const sidePhotos = photos.filter(p => p.id !== coverPhoto.id);
+  const photos = listing.media && listing.media.length > 0 ? listing.media : [];
+  const coverPhoto = photos.find(p => p.isCover) || photos[0] || null;
+  const sidePhotos = coverPhoto ? photos.filter(p => p.id !== coverPhoto.id) : [];
 
   // Verification checks count
   const checks = listing.verificationChecks || [];
@@ -194,35 +176,43 @@ export default async function ListingDetailsPage({
         </div>
 
         {/* Coherent Single-Property Photo Gallery */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 rounded-[2px] overflow-hidden aspect-[16/10] sm:aspect-[21/9] lg:aspect-[24/10] bg-surface-muted border border-border">
-          <div className={`${sidePhotos.length > 0 ? 'lg:col-span-7' : 'lg:col-span-12'} relative overflow-hidden bg-surface-muted h-full group`}>
-            <img
-              src={coverPhoto.approvedR2Key}
-              alt={coverPhoto.caption || listing.title || 'Property Main View'}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-102"
-            />
-            <span className="absolute bottom-3.5 left-3.5 rounded-[2px] bg-midnight/90 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white tracking-wide uppercase font-mono">
-              {coverPhoto.caption || (coverPhoto.roomTag && ROOM_TAG_MAP[coverPhoto.roomTag]) || 'Primary View'}
-            </span>
-          </div>
-
-          {sidePhotos.length > 0 && (
-            <div className={`lg:col-span-5 grid ${sidePhotos.length === 1 ? 'grid-rows-1' : 'grid-rows-2'} gap-3 hidden sm:grid h-full`}>
-              {sidePhotos.slice(0, 2).map((photo, idx) => (
-                <div key={photo.id || idx} className="relative overflow-hidden bg-surface-muted group">
-                  <img
-                    src={photo.approvedR2Key}
-                    alt={photo.caption || `Room view ${idx + 1}`}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-102"
-                  />
-                  <span className="absolute bottom-3.5 left-3.5 rounded-[2px] bg-midnight/90 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white tracking-wide uppercase font-mono">
-                    {photo.caption || (photo.roomTag && ROOM_TAG_MAP[photo.roomTag]) || `Photo ${idx + 2}`}
-                  </span>
-                </div>
-              ))}
+        {coverPhoto ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 rounded-[2px] overflow-hidden aspect-[16/10] sm:aspect-[21/9] lg:aspect-[24/10] bg-surface-muted border border-border">
+            <div className={`${sidePhotos.length > 0 ? 'lg:col-span-7' : 'lg:col-span-12'} relative overflow-hidden bg-surface-muted h-full group`}>
+              <img
+                src={coverPhoto.approvedR2Key}
+                alt={coverPhoto.caption || listing.title || 'Property Main View'}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-102"
+              />
+              <span className="absolute bottom-3.5 left-3.5 rounded-[2px] bg-midnight/90 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white tracking-wide uppercase font-mono">
+                {coverPhoto.caption || (coverPhoto.roomTag && ROOM_TAG_MAP[coverPhoto.roomTag]) || 'Primary View'}
+              </span>
             </div>
-          )}
-        </div>
+
+            {sidePhotos.length > 0 && (
+              <div className={`lg:col-span-5 grid ${sidePhotos.length === 1 ? 'grid-rows-1' : 'grid-rows-2'} gap-3 hidden sm:grid h-full`}>
+                {sidePhotos.slice(0, 2).map((photo, idx) => (
+                  <div key={photo.id || idx} className="relative overflow-hidden bg-surface-muted group">
+                    <img
+                      src={photo.approvedR2Key}
+                      alt={photo.caption || `Room view ${idx + 1}`}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-102"
+                    />
+                    <span className="absolute bottom-3.5 left-3.5 rounded-[2px] bg-midnight/90 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white tracking-wide uppercase font-mono">
+                      {photo.caption || (photo.roomTag && ROOM_TAG_MAP[photo.roomTag]) || `Photo ${idx + 2}`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-[2px] border border-border bg-surface-muted p-12 text-center space-y-3">
+            <Building2 className="h-12 w-12 text-text-muted mx-auto" />
+            <h3 className="text-base font-bold text-midnight">{listing.title}</h3>
+            <p className="text-xs text-text-secondary">Verified Residential Property in {clusterLabel}</p>
+          </div>
+        )}
 
         {/* Main Content & Sticky Request Action Rail */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start pt-4">

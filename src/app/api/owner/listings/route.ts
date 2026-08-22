@@ -36,9 +36,10 @@ const CreateListingSchema = z.object({
     urlOrDoc: z.string().min(1, 'Evidence reference or document is required'),
     consumerNumber: z.string().optional(),
   }).optional(),
-  ownerName: z.string().optional().default('Property Owner'),
-  ownerPhone: z.string().optional().default('+919849012345'),
-  ownerEmail: z.string().email().optional().default('owner@therentalcircle.in'),
+  ownerId: z.string().optional(),
+  ownerName: z.string().min(1, 'Owner name is required'),
+  ownerPhone: z.string().min(8, 'Valid phone number is required'),
+  ownerEmail: z.string().email('Valid email is required'),
 });
 
 function generateSlug(title: string, cluster: string): string {
@@ -98,14 +99,14 @@ export async function POST(req: NextRequest) {
 
     const createdListing = store.createListing({
       slug,
-      ownerId: 'owner-current-user',
+      ownerId: data.ownerId || `owner_${Date.now()}`,
       ownerName: data.ownerName,
       ownerPhone: data.ownerPhone,
       ownerEmail: data.ownerEmail,
       status: 'pending_review', // Strictly starts in pending_review
       cluster: data.cluster,
       colonyOrSociety: data.colonyOrSociety,
-      landmark: data.landmark,
+      landmark: data.landmark || '',
       pincode: data.pincode,
       title: data.title,
       description: data.description,
@@ -199,21 +200,19 @@ export async function POST(req: NextRequest) {
               : 'Utility connection evidence attached.',
           },
         ],
-        utilityEvidence: {
-          provider: 'TSSPDCL / TGSPDCL',
-          consumerNumber: createdListing.evidence?.consumerNumber || '1029384756',
-          sectionOffice: `${createdListing.cluster} Section Office`,
-          tariffCategory: 'LT-I(A) Domestic',
-          meterNumber: `TSS-${createdListing.cluster.toUpperCase().slice(0, 2)}-${Math.floor(10000 + Math.random() * 90000)}`,
-          billingMonth: 'July 2026',
-          billedUnits: 250,
-          amountPaid: 1650,
-          paymentDate: '2026-08-05',
-          documentName: createdListing.evidence?.urlOrDoc || 'TSSPDCL_Utility_Evidence.pdf',
-          documentUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80',
-          addressOnRecord: `${createdListing.colonyOrSociety}, ${createdListing.cluster}, Hyderabad ${createdListing.pincode}`,
-          matchingAddressScore: '100% Locality & Name Match',
-        },
+        utilityEvidence: createdListing.evidence
+          ? {
+              provider: createdListing.evidence.type === 'tgspdcl_bill' ? 'TSSPDCL / TGSPDCL' : 'GHMC / Society',
+              consumerNumber: createdListing.evidence.consumerNumber || '',
+              sectionOffice: `${createdListing.cluster} Section Office`,
+              tariffCategory: 'LT-I(A) Domestic',
+              meterNumber: createdListing.evidence.consumerNumber ? `MTR-${createdListing.evidence.consumerNumber}` : undefined,
+              documentName: createdListing.evidence.urlOrDoc,
+              documentUrl: createdListing.evidence.urlOrDoc,
+              addressOnRecord: `${createdListing.colonyOrSociety}, ${createdListing.cluster}, Hyderabad ${createdListing.pincode}`,
+              matchingAddressScore: 'Pending Moderator Inspection',
+            }
+          : undefined,
         moderationHistory: [
           {
             id: `mh_${createdListing.id}_sub`,

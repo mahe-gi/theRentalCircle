@@ -51,7 +51,7 @@ function BrowseHomesContent() {
               monthlyRent: l.monthlyRent,
               maintenanceCharges: l.maintenanceCharges || 0,
               carpetAreaSqFt: l.carpetAreaSqFt,
-              coverImageUrl: l.photos?.[0]?.url || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1000&q=80',
+              coverImageUrl: l.photos?.find((p: any) => p.isCover)?.url || l.photos?.[0]?.url || '',
               hasConnectionEvidence: !!l.evidence,
               isContactConfirmed: true,
               confirmedDate: new Date(l.publishedAt || l.submittedAt || Date.now()).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }),

@@ -23,19 +23,19 @@ export interface VerificationCheckItem {
 export interface UtilityEvidenceDetails {
   provider: string;
   consumerNumber: string;
-  sectionOffice: string;
-  tariffCategory: string;
-  meterNumber: string;
-  billingMonth: string;
-  billedUnits: number;
-  amountPaid: number;
-  paymentDate: string;
+  sectionOffice?: string;
+  tariffCategory?: string;
+  meterNumber?: string;
+  billingMonth?: string;
+  billedUnits?: number;
+  amountPaid?: number;
+  paymentDate?: string;
   ghmcPtin?: string;
   ghmcAssessmentYear?: string;
-  documentName: string;
-  documentUrl: string;
-  addressOnRecord: string;
-  matchingAddressScore: string;
+  documentName?: string;
+  documentUrl?: string;
+  addressOnRecord?: string;
+  matchingAddressScore?: string;
 }
 
 export interface ModerationTimelineEvent {
@@ -89,7 +89,7 @@ export interface AdminListing {
   };
   photos: RoomPhoto[];
   verificationChecks: VerificationCheckItem[];
-  utilityEvidence: UtilityEvidenceDetails;
+  utilityEvidence?: UtilityEvidenceDetails;
   moderationHistory: ModerationTimelineEvent[];
 }
 
@@ -134,7 +134,7 @@ export function approveAdminListing(
     ...check,
     status: 'approved' as const,
     verifiedAt: now,
-    reviewedByUserId: 'usr_admin_mahesh',
+    reviewedByUserId: moderatorName,
     reviewerNotes: check.reviewerNotes || 'Approved by Founder moderation',
   }));
 
@@ -189,7 +189,7 @@ export function rejectAdminListing(
     ...check,
     status: (check.status === 'approved' ? 'approved' : 'rejected') as 'pending' | 'approved' | 'rejected',
     verifiedAt: now,
-    reviewedByUserId: 'usr_admin_mahesh',
+    reviewedByUserId: moderatorName,
   }));
 
   const updatedHistory: ModerationTimelineEvent[] = [

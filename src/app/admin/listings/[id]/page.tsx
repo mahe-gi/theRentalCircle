@@ -548,74 +548,82 @@ export default function AdminListingInspectorPage({
                 </span>
               </div>
 
-              <div className="space-y-3 text-xs">
-                <div className="bg-surface-subtle p-3 rounded-[2px] border border-border space-y-2">
-                  <div>
-                    <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Provider / Authority</span>
-                    <span className="font-bold text-midnight">{listing.utilityEvidence.provider}</span>
+              {listing.utilityEvidence ? (
+                <div className="space-y-3 text-xs">
+                  <div className="bg-surface-subtle p-3 rounded-[2px] border border-border space-y-2">
+                    <div>
+                      <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Provider / Authority</span>
+                      <span className="font-bold text-midnight">{listing.utilityEvidence.provider}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border">
+                      <div>
+                        <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Unique Service No</span>
+                        <span className="font-mono font-bold text-cobalt text-xs">{listing.utilityEvidence.consumerNumber}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Meter No</span>
+                        <span className="font-mono font-bold text-midnight text-xs">{listing.utilityEvidence.meterNumber || 'Pending Check'}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border">
+                      <div>
+                        <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Tariff Category</span>
+                        <span className="font-medium text-midnight">{listing.utilityEvidence.tariffCategory || 'Domestic'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Billed Units</span>
+                        <span className="font-mono font-bold text-midnight">{listing.utilityEvidence.billedUnits ? `${listing.utilityEvidence.billedUnits} kWh` : 'N/A'}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border">
+                      <div>
+                        <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Bill Month / Paid</span>
+                        <span className="font-mono font-medium text-midnight">{listing.utilityEvidence.billingMonth || 'Current Period'} {listing.utilityEvidence.amountPaid ? `(${formatINR(listing.utilityEvidence.amountPaid)})` : ''}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">GHMC PTIN</span>
+                        <span className="font-mono font-medium text-midnight">{listing.utilityEvidence.ghmcPtin || 'N/A'}</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Unique Service No</span>
-                      <span className="font-mono font-bold text-cobalt text-xs">{listing.utilityEvidence.consumerNumber}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Meter No</span>
-                      <span className="font-mono font-bold text-midnight text-xs">{listing.utilityEvidence.meterNumber}</span>
-                    </div>
+                  {/* Match Score */}
+                  <div className="rounded-[2px] bg-verified-surface border border-verified-border p-2.5 text-xs text-verified font-bold flex items-center justify-between">
+                    <span>Address Match:</span>
+                    <span className="font-mono">{listing.utilityEvidence.matchingAddressScore || 'Pending Verification'}</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Tariff Category</span>
-                      <span className="font-medium text-midnight">{listing.utilityEvidence.tariffCategory}</span>
+                  {/* Document Preview Box */}
+                  {listing.utilityEvidence.documentUrl && (
+                    <div className="border border-border rounded-[2px] p-3 bg-surface-muted space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase text-text-muted">Evidence Document</span>
+                        <span className="text-[10px] font-mono text-cobalt font-bold">Document Attachment</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white p-2 rounded border border-border">
+                        <FileText className="h-4 w-4 text-cobalt shrink-0" />
+                        <span className="text-xs font-mono font-medium truncate flex-1">{listing.utilityEvidence.documentName || 'Evidence Document'}</span>
+                        <a
+                          href={listing.utilityEvidence.documentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 text-text-muted hover:text-midnight"
+                          title="Inspect Document"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Billed Units</span>
-                      <span className="font-mono font-bold text-midnight">{listing.utilityEvidence.billedUnits} kWh</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border">
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">Bill Month / Paid</span>
-                      <span className="font-mono font-medium text-midnight">{listing.utilityEvidence.billingMonth} ({formatINR(listing.utilityEvidence.amountPaid)})</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-text-muted block">GHMC PTIN</span>
-                      <span className="font-mono font-medium text-midnight">{listing.utilityEvidence.ghmcPtin || 'N/A'}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* Match Score */}
-                <div className="rounded-[2px] bg-verified-surface border border-verified-border p-2.5 text-xs text-verified font-bold flex items-center justify-between">
-                  <span>Address Match:</span>
-                  <span className="font-mono">{listing.utilityEvidence.matchingAddressScore}</span>
+              ) : (
+                <div className="p-4 rounded-[2px] border border-border bg-surface-subtle text-xs text-text-secondary">
+                  No utility bill uploaded. Conduct direct phone verification with owner.
                 </div>
-
-                {/* Document Preview Box */}
-                <div className="border border-border rounded-[2px] p-3 bg-surface-muted space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold uppercase text-text-muted">Evidence Document</span>
-                    <span className="text-[10px] font-mono text-cobalt font-bold">PDF Attachment</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white p-2 rounded border border-border">
-                    <FileText className="h-4 w-4 text-cobalt shrink-0" />
-                    <span className="text-xs font-mono font-medium truncate flex-1">{listing.utilityEvidence.documentName}</span>
-                    <a
-                      href={listing.utilityEvidence.documentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1 text-text-muted hover:text-midnight"
-                      title="Inspect Document"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* 2. OWNER IDENTITY & CONTACT CONFIRMATION */}

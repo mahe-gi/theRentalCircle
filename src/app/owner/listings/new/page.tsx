@@ -42,37 +42,6 @@ interface PhotoItem {
   isCover: boolean;
 }
 
-const SAMPLE_PHOTO_PRESETS: PhotoItem[] = [
-  {
-    id: 'sample-1',
-    url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80',
-    roomTag: 'main_room',
-    caption: 'Sunlit living and dining room with cross ventilation',
-    isCover: true,
-  },
-  {
-    id: 'sample-2',
-    url: 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef7?auto=format&fit=crop&w=1200&q=80',
-    roomTag: 'bedroom',
-    caption: 'Master bedroom with built-in wooden wardrobes',
-    isCover: false,
-  },
-  {
-    id: 'sample-3',
-    url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1200&q=80',
-    roomTag: 'kitchen',
-    caption: 'L-shaped modular kitchen with granite platform',
-    isCover: false,
-  },
-  {
-    id: 'sample-4',
-    url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1200&q=80',
-    roomTag: 'bathroom',
-    caption: 'Western toilet attached bathroom with geyser',
-    isCover: false,
-  },
-];
-
 const AVAILABLE_AMENITIES = [
   { id: '24/7 Water', label: '24/7 Water Supply', icon: '💧' },
   { id: 'Power Backup', label: '100% Power Backup', icon: '⚡' },
@@ -109,7 +78,7 @@ export default function NewOwnerListingPage() {
   // Step 2: Financial Terms
   const [monthlyRent, setMonthlyRent] = useState<number>(25000);
   const [securityDeposit, setSecurityDeposit] = useState<number>(50000);
-  const [maintenanceCharges, setMaintenanceCharges] = useState<number>(2000);
+  const [maintenanceCharges, setMaintenanceCharges] = useState<number>(0);
   const [isMaintenanceIncluded, setIsMaintenanceIncluded] = useState<boolean>(false);
   const [lockInMonths, setLockInMonths] = useState<number>(6);
   const [noticeDays, setNoticeDays] = useState<number>(30);
@@ -118,36 +87,32 @@ export default function NewOwnerListingPage() {
   );
 
   // Step 3: Space Specs & House Guidelines
-  const [carpetAreaSqFt, setCarpetAreaSqFt] = useState<number>(1100);
-  const [floorNumber, setFloorNumber] = useState<number>(2);
-  const [totalFloors, setTotalFloors] = useState<number>(5);
+  const [carpetAreaSqFt, setCarpetAreaSqFt] = useState<number>(1000);
+  const [floorNumber, setFloorNumber] = useState<number>(1);
+  const [totalFloors, setTotalFloors] = useState<number>(4);
   const [furnishingStatus, setFurnishingStatus] = useState<'unfurnished' | 'semi_furnished' | 'fully_furnished'>('semi_furnished');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([
     '24/7 Water',
     'Power Backup',
-    'Lift',
-    'Covered Car Parking',
-    'Geyser',
-    'Wardrobe',
   ]);
   const [petsAllowed, setPetsAllowed] = useState<boolean>(false);
-  const [houseGuidelines, setHouseGuidelines] = useState<string>('Quiet residential environment. Clean and timely rent maintenance expected.');
+  const [houseGuidelines, setHouseGuidelines] = useState<string>('');
 
-  // Step 4: Photos
-  const [photos, setPhotos] = useState<PhotoItem[]>([...SAMPLE_PHOTO_PRESETS]);
+  // Step 4: Photos (Clean empty array)
+  const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [newPhotoTag, setNewPhotoTag] = useState<PhotoItem['roomTag']>('main_room');
   const [newPhotoCaption, setNewPhotoCaption] = useState('');
 
   // Step 5: Private Utility Evidence
   const [evidenceType, setEvidenceType] = useState<'tgspdcl_bill' | 'ghmc_tax_receipt' | 'society_noc' | 'other'>('tgspdcl_bill');
-  const [consumerNumber, setConsumerNumber] = useState('1029384756');
-  const [evidenceDocRef, setEvidenceDocRef] = useState('TSSPDCL_Electricity_Bill_July2026.pdf');
+  const [consumerNumber, setConsumerNumber] = useState('');
+  const [evidenceDocRef, setEvidenceDocRef] = useState('');
 
   // Step 6: Owner & Handshake Confirmation
-  const [ownerName, setOwnerName] = useState('Suresh Reddy');
-  const [ownerPhone, setOwnerPhone] = useState('+91 98490 12345');
-  const [ownerEmail, setOwnerEmail] = useState('owner1@therentalcircle.in');
+  const [ownerName, setOwnerName] = useState('');
+  const [ownerPhone, setOwnerPhone] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
   const [founderCallAcknowledged, setFounderCallAcknowledged] = useState(true);
   const [zeroBrokerageDeclared, setZeroBrokerageDeclared] = useState(true);
 
@@ -218,11 +183,6 @@ export default function NewOwnerListingPage() {
   // Set Cover Photo
   const handleSetCoverPhoto = (id: string) => {
     setPhotos(photos.map(p => ({ ...p, isCover: p.id === id })));
-  };
-
-  // Quick preset photos
-  const handleLoadSamplePhotos = () => {
-    setPhotos([...SAMPLE_PHOTO_PRESETS]);
   };
 
   // Step navigation validations
@@ -953,26 +913,16 @@ export default function NewOwnerListingPage() {
         {/* STEP 4: ROOM-BY-ROOM PHOTO MANAGEMENT */}
         {currentStep === 4 && (
           <div className="rounded-[2px] border border-border bg-white p-6 sm:p-8 space-y-6 shadow-sm text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
-              <div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-cobalt">
-                  Step 4 &bull; Room-by-Room Photo Gallery
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black text-midnight tracking-tight mt-1">
-                  Upload & tag authentic room photographs
-                </h2>
-                <p className="text-xs sm:text-sm text-text-secondary mt-1">
-                  Every photo must have a specific room tag. No agency watermarks or generic stock photos allowed.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleLoadSamplePhotos}
-                className="inline-flex items-center gap-1.5 rounded-[2px] border border-cobalt bg-cobalt/5 px-3 py-1.5 text-xs font-mono font-bold text-cobalt hover:bg-cobalt hover:text-white transition-all shrink-0 self-start sm:self-auto"
-              >
-                <Sparkles className="h-3.5 w-3.5" /> Load Sample Pack
-              </button>
+            <div className="border-b border-border pb-4">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-cobalt">
+                Step 4 &bull; Room-by-Room Photo Gallery
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-midnight tracking-tight mt-1">
+                Upload & tag authentic room photographs
+              </h2>
+              <p className="text-xs sm:text-sm text-text-secondary mt-1">
+                Every photo must have a specific room tag. No agency watermarks or generic stock photos allowed.
+              </p>
             </div>
 
             {/* Photo List Preview */}

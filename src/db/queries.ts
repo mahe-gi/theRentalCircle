@@ -7,10 +7,9 @@ import type {
   VerificationCheck,
   RentalRequest,
   NewRentalRequest,
-  User,
 } from './schema';
+import { getDataStore, type StoredListing, type StoredRentalRequest } from '@/lib/data-store';
 
-// In-Memory Fallback Store for Local Development & Immediate Client-Side Interactivity
 export interface ExtendedListing extends Listing {
   media: ListingMedia[];
   amenities: string[];
@@ -33,47 +32,105 @@ export interface ExtendedRentalRequest extends RentalRequest {
   renterPhone?: string;
 }
 
-// Seed Admin Users
-const SEED_USERS: Record<string, User> = {
-  'usr_admin_mahesh': {
-    id: 'usr_admin_mahesh',
-    name: 'Mahesh (Founder / Admin)',
-    email: 'chmahesh997@gmail.com',
-    emailVerified: true,
-    image: null,
-    role: 'admin',
-    phoneHash: 'hash_admin_mahesh',
-    encryptedPhone: 'enc_9999900000',
-    phoneVerified: true,
-    phoneConfirmedAt: new Date(),
-    phoneConfirmedBy: 'system',
-    phoneConfirmationMethod: 'founder_call',
-    isBanned: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  'usr_admin_1': {
-    id: 'usr_admin_1',
-    name: 'Founder / Moderator',
-    email: 'admin.trc@therentalcircle.in',
-    emailVerified: true,
-    image: null,
-    role: 'admin',
-    phoneHash: 'hash_admin_1',
-    encryptedPhone: 'enc_9876543210',
-    phoneVerified: true,
-    phoneConfirmedAt: new Date(),
-    phoneConfirmedBy: 'system',
-    phoneConfirmationMethod: 'founder_call',
-    isBanned: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-};
+function mapStoredToExtendedListing(stored: StoredListing): ExtendedListing {
+  return {
+    id: stored.id,
+    ownerId: stored.ownerId,
+    slug: stored.slug,
+    status: stored.status,
+    cluster: stored.cluster,
+    colonyOrSociety: stored.colonyOrSociety,
+    landmark: stored.landmark || null,
+    pincode: stored.pincode,
+    encryptedExactAddress: null,
+    title: stored.title,
+    description: stored.description,
+    propertyType: stored.propertyType,
+    monthlyRent: stored.monthlyRent,
+    securityDeposit: stored.securityDeposit,
+    maintenanceCharges: stored.maintenanceCharges,
+    isMaintenanceIncluded: stored.isMaintenanceIncluded,
+    lockInMonths: stored.lockInMonths,
+    noticeDays: stored.noticeDays,
+    furnishingStatus: stored.furnishingStatus,
+    carpetAreaSqFt: stored.carpetAreaSqFt,
+    floorNumber: stored.floorNumber,
+    totalFloors: stored.totalFloors,
+    availableFrom: new Date(stored.availableFrom),
+    petsAllowed: stored.petsAllowed,
+    moderationNotes: stored.moderationNotes || null,
+    rejectionReason: stored.rejectionReason || null,
+    submittedAt: new Date(stored.submittedAt),
+    publishedAt: stored.publishedAt ? new Date(stored.publishedAt) : null,
+    lastAvailabilityConfirmedAt: new Date(stored.lastAvailabilityConfirmedAt),
+    createdAt: new Date(stored.createdAt),
+    updatedAt: new Date(stored.updatedAt),
+    media: (stored.photos || []).map((p, idx) => ({
+      id: `med_${stored.id}_${idx}`,
+      listingId: stored.id,
+      approvedR2Key: p.url,
+      roomTag: (p.roomTag as any) || 'bedroom',
+      caption: p.caption || '',
+      displayOrder: idx,
+      isCover: p.isCover ?? idx === 0,
+      isApproved: true,
+      width: 1200,
+      height: 800,
+      sizeBytes: 150000,
+      createdAt: new Date(stored.createdAt),
+    })),
+    amenities: stored.amenities || [],
+    verificationChecks: [
+      {
+        id: `chk_${stored.id}_call`,
+        listingId: stored.id,
+        checkType: 'listing_contact_call',
+        status: stored.status === 'published' ? 'approved' : 'pending',
+        evidenceType: 'phone_call',
+        reviewedByUserId: null,
+        reviewerNotes: null,
+        verifiedAt: stored.publishedAt ? new Date(stored.publishedAt) : null,
+        createdAt: new Date(stored.createdAt),
+      },
+    ],
+    owner: {
+      name: stored.ownerName,
+      email: stored.ownerEmail,
+      phone: stored.ownerPhone,
+    },
+  };
+}
 
-// 100% Clean Fresh Production Catalog (Empty by Default)
-let MOCK_LISTINGS: ExtendedListing[] = [];
-let MOCK_REQUESTS: ExtendedRentalRequest[] = [];
+function mapStoredToExtendedRequest(stored: StoredRentalRequest): ExtendedRentalRequest {
+  const store = getDataStore();
+  const listing = store.getListingById(stored.listingId) || store.getListingBySlug(stored.listingId);
+  return {
+    id: stored.id,
+    listingId: stored.listingId,
+    renterId: stored.renterId,
+    status: stored.status,
+    intendedMoveInDate: new Date(stored.intendedMoveInDate),
+    rentalDurationMonths: stored.rentalDurationMonths,
+    occupantsCount: stored.occupantsCount,
+    householdArrangement: stored.householdArrangement,
+    employmentCategory: stored.employmentCategory,
+    petsDescription: stored.petsDescription || null,
+    optionalIntroduction: stored.optionalIntroduction || null,
+    viewedAt: stored.viewedAt ? new Date(stored.viewedAt) : null,
+    respondedAt: stored.respondedAt ? new Date(stored.respondedAt) : null,
+    declineReason: stored.declineReason || null,
+    createdAt: new Date(stored.createdAt),
+    updatedAt: new Date(stored.updatedAt),
+    listingTitle: listing?.title || 'Residential Property',
+    listingSlug: listing?.slug || '',
+    listingRent: listing?.monthlyRent || 0,
+    ownerName: listing?.ownerName || 'Property Contact',
+    ownerPhone: listing?.ownerPhone || undefined,
+    renterName: stored.renterName,
+    renterEmail: stored.renterEmail,
+    renterPhone: stored.renterPhone,
+  };
+}
 
 // Query Repository Functions
 export async function getPublishedListings(filters: {
@@ -83,39 +140,45 @@ export async function getPublishedListings(filters: {
   furnishing?: string;
   query?: string;
 } = {}): Promise<ExtendedListing[]> {
-  return MOCK_LISTINGS.filter(item => {
-    if (item.status !== 'published') return false;
-    if (filters.cluster && item.cluster !== filters.cluster) return false;
-    if (filters.maxRent && (item.monthlyRent || 0) > filters.maxRent) return false;
-    if (filters.propertyType && item.propertyType !== filters.propertyType) return false;
-    if (filters.furnishing && item.furnishingStatus !== filters.furnishing) return false;
-    if (filters.query) {
-      const q = filters.query.toLowerCase();
-      const match =
-        (item.title || '').toLowerCase().includes(q) ||
-        (item.cluster || '').toLowerCase().includes(q) ||
-        (item.colonyOrSociety || '').toLowerCase().includes(q) ||
-        (item.description || '').toLowerCase().includes(q);
-      if (!match) return false;
-    }
-    return true;
-  });
+  const store = getDataStore();
+  const allListings = store.getListings();
+
+  return allListings
+    .filter(item => {
+      if (item.status !== 'published') return false;
+      if (filters.cluster && item.cluster !== filters.cluster) return false;
+      if (filters.maxRent && (item.monthlyRent || 0) > filters.maxRent) return false;
+      if (filters.propertyType && item.propertyType !== filters.propertyType) return false;
+      if (filters.furnishing && item.furnishingStatus !== filters.furnishing) return false;
+      if (filters.query) {
+        const q = filters.query.toLowerCase();
+        const match =
+          (item.title || '').toLowerCase().includes(q) ||
+          (item.cluster || '').toLowerCase().includes(q) ||
+          (item.colonyOrSociety || '').toLowerCase().includes(q) ||
+          (item.description || '').toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      return true;
+    })
+    .map(mapStoredToExtendedListing);
 }
 
 export async function getListingBySlug(slug: string): Promise<ExtendedListing | null> {
-  const cleanSlug = decodeURIComponent(slug).trim().toLowerCase();
-  const item = MOCK_LISTINGS.find(l => l.slug.toLowerCase() === cleanSlug || l.id.toLowerCase() === cleanSlug);
-  return item || null;
+  const store = getDataStore();
+  const item = store.getListingBySlug(slug) || store.getListingById(slug);
+  return item ? mapStoredToExtendedListing(item) : null;
 }
 
 export async function getListingById(id: string): Promise<ExtendedListing | null> {
-  const cleanId = decodeURIComponent(id).trim().toLowerCase();
-  const item = MOCK_LISTINGS.find(l => l.id.toLowerCase() === cleanId || l.slug.toLowerCase() === cleanId);
-  return item || null;
+  const store = getDataStore();
+  const item = store.getListingById(id) || store.getListingBySlug(id);
+  return item ? mapStoredToExtendedListing(item) : null;
 }
 
 export async function getOwnerListings(ownerId: string): Promise<ExtendedListing[]> {
-  return MOCK_LISTINGS.filter(l => l.ownerId === ownerId);
+  const store = getDataStore();
+  return store.getOwnerListings(ownerId).map(mapStoredToExtendedListing);
 }
 
 export async function createListing(
@@ -124,26 +187,30 @@ export async function createListing(
     cluster: any;
     propertyType: any;
     monthlyRent: number;
+    ownerName?: string;
+    ownerPhone?: string;
+    ownerEmail?: string;
   },
   mediaItems: Partial<NewListingMedia>[] = [],
   amenityList: string[] = []
 ): Promise<ExtendedListing> {
-  const id = 'lst_' + Math.random().toString(36).substring(2, 9);
+  const store = getDataStore();
   const slug = listingData.title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') + '-' + id.slice(-4);
+    .replace(/^-|-$/g, '') + '-' + Math.random().toString(36).substring(2, 6);
 
-  const newListing: ExtendedListing = {
-    id,
-    ownerId: listingData.ownerId || 'usr_owner_1',
+  const created = store.createListing({
     slug,
+    ownerId: listingData.ownerId || 'owner_user',
+    ownerName: listingData.ownerName || 'Property Owner',
+    ownerPhone: listingData.ownerPhone || '',
+    ownerEmail: listingData.ownerEmail || '',
     status: 'pending_review',
     cluster: listingData.cluster,
-    colonyOrSociety: listingData.colonyOrSociety || 'West Hyderabad',
-    landmark: listingData.landmark || null,
+    colonyOrSociety: listingData.colonyOrSociety || 'Hyderabad',
+    landmark: listingData.landmark || '',
     pincode: listingData.pincode || '500081',
-    encryptedExactAddress: listingData.encryptedExactAddress || null,
     title: listingData.title,
     description: listingData.description || '',
     propertyType: listingData.propertyType,
@@ -157,52 +224,18 @@ export async function createListing(
     carpetAreaSqFt: listingData.carpetAreaSqFt || 500,
     floorNumber: listingData.floorNumber || 1,
     totalFloors: listingData.totalFloors || 4,
-    availableFrom: listingData.availableFrom || new Date(),
+    availableFrom: typeof listingData.availableFrom === 'string' ? listingData.availableFrom : new Date().toISOString().split('T')[0],
     petsAllowed: listingData.petsAllowed || false,
-    moderationNotes: null,
-    rejectionReason: null,
-    submittedAt: new Date(),
-    publishedAt: null,
-    lastAvailabilityConfirmedAt: new Date(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    media: mediaItems.map((m, idx) => ({
-      id: 'med_' + Math.random().toString(36).substring(2, 9),
-      listingId: id,
-      approvedR2Key: m.approvedR2Key || 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80',
-      roomTag: (m.roomTag as any) || 'bedroom',
-      caption: m.caption || 'Property view',
-      displayOrder: idx,
-      isCover: idx === 0,
-      isApproved: false,
-      width: 1200,
-      height: 800,
-      sizeBytes: 150000,
-      createdAt: new Date(),
-    })),
-    amenities: amenityList.length > 0 ? amenityList : ['24/7 Water', 'Power Backup', 'Bike Parking'],
-    verificationChecks: [
-      {
-        id: 'chk_' + Math.random().toString(36).substring(2, 9),
-        listingId: id,
-        checkType: 'listing_contact_call',
-        status: 'pending',
-        evidenceType: 'phone_call',
-        reviewedByUserId: null,
-        reviewerNotes: null,
-        verifiedAt: null,
-        createdAt: new Date(),
-      },
-    ],
-    owner: {
-      name: 'Owner',
-      email: 'owner@therentalcircle.in',
-      phone: '+91 98490 00000',
-    },
-  };
+    amenities: amenityList,
+    photos: mediaItems.map((m, idx) => ({
+      url: m.approvedR2Key || '',
+      roomTag: (m.roomTag as any) || 'main_room',
+      caption: m.caption || '',
+      isCover: m.isCover ?? idx === 0,
+    })).filter(p => !!p.url),
+  });
 
-  MOCK_LISTINGS.unshift(newListing);
-  return newListing;
+  return mapStoredToExtendedListing(created);
 }
 
 export async function createRentalRequest(
@@ -212,94 +245,68 @@ export async function createRentalRequest(
     intendedMoveInDate: Date;
     householdArrangement: any;
     employmentCategory: any;
+    renterName?: string;
+    renterEmail?: string;
+    renterPhone?: string;
   }
 ): Promise<ExtendedRentalRequest> {
-  const id = 'req_' + Math.random().toString(36).substring(2, 9);
-  const targetListing = MOCK_LISTINGS.find(l => l.id === data.listingId);
-
-  const newReq: ExtendedRentalRequest = {
-    id,
+  const store = getDataStore();
+  const created = store.createRequest({
     listingId: data.listingId,
     renterId: data.renterId,
-    status: 'submitted',
-    intendedMoveInDate: data.intendedMoveInDate,
+    renterName: data.renterName || 'Prospective Renter',
+    renterPhone: data.renterPhone || '',
+    renterEmail: data.renterEmail || '',
+    intendedMoveInDate: data.intendedMoveInDate.toISOString().split('T')[0],
     rentalDurationMonths: data.rentalDurationMonths || 11,
     occupantsCount: data.occupantsCount || 1,
     householdArrangement: data.householdArrangement,
     employmentCategory: data.employmentCategory,
-    petsDescription: data.petsDescription || null,
-    optionalIntroduction: data.optionalIntroduction || null,
-    viewedAt: null,
-    respondedAt: null,
-    declineReason: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    listingTitle: targetListing?.title || 'Residential Unit',
-    listingSlug: targetListing?.slug || '',
-    listingRent: targetListing?.monthlyRent || 0,
-    ownerName: targetListing?.owner?.name || 'Property Contact',
-    ownerPhone: targetListing?.owner?.phone || '+91 98490 12345',
-    renterName: 'Renter',
-    renterEmail: 'renter@therentalcircle.in',
-    renterPhone: '+91 99887 76655',
-  };
+    petsDescription: data.petsDescription || undefined,
+    optionalIntroduction: data.optionalIntroduction || undefined,
+  });
 
-  MOCK_REQUESTS.unshift(newReq);
-  return newReq;
+  return mapStoredToExtendedRequest(created);
 }
 
 export async function getRenterRequests(renterId: string): Promise<ExtendedRentalRequest[]> {
-  return MOCK_REQUESTS.filter(r => r.renterId === renterId);
+  const store = getDataStore();
+  return store.getRenterRequests(renterId).map(mapStoredToExtendedRequest);
 }
 
 export async function getOwnerListingRequests(listingId: string): Promise<ExtendedRentalRequest[]> {
-  return MOCK_REQUESTS.filter(r => r.listingId === listingId);
+  const store = getDataStore();
+  return store.getListingRequests(listingId).map(mapStoredToExtendedRequest);
 }
 
 export async function acceptRentalRequest(requestId: string): Promise<ExtendedRentalRequest | null> {
-  const req = MOCK_REQUESTS.find(r => r.id === requestId);
-  if (!req) return null;
-  req.status = 'accepted';
-  req.respondedAt = new Date();
-  req.updatedAt = new Date();
-  return req;
+  const store = getDataStore();
+  const result = store.acceptRequest(requestId);
+  return result ? mapStoredToExtendedRequest(result.request) : null;
 }
 
 export async function declineRentalRequest(requestId: string, reason?: string): Promise<ExtendedRentalRequest | null> {
-  const req = MOCK_REQUESTS.find(r => r.id === requestId);
-  if (!req) return null;
-  req.status = 'declined';
-  req.declineReason = reason || 'Property no longer available or mismatched criteria.';
-  req.respondedAt = new Date();
-  req.updatedAt = new Date();
-  return req;
+  const store = getDataStore();
+  const req = store.declineRequest(requestId, reason);
+  return req ? mapStoredToExtendedRequest(req) : null;
 }
 
 export async function getAdminModerationQueue(status?: string): Promise<ExtendedListing[]> {
-  if (!status || status === 'all') return MOCK_LISTINGS;
-  return MOCK_LISTINGS.filter(l => l.status === status);
+  const store = getDataStore();
+  const listings = store.getListings();
+  if (!status || status === 'all') return listings.map(mapStoredToExtendedListing);
+  return listings.filter(l => l.status === status).map(mapStoredToExtendedListing);
 }
 
 export async function approveListing(listingId: string, moderatorId: string): Promise<ExtendedListing | null> {
-  const listing = MOCK_LISTINGS.find(l => l.id === listingId);
-  if (!listing) return null;
-  listing.status = 'published';
-  listing.publishedAt = new Date();
-  listing.lastAvailabilityConfirmedAt = new Date();
-  listing.updatedAt = new Date();
-  listing.verificationChecks.forEach(c => {
-    c.status = 'approved';
-    c.reviewedByUserId = moderatorId;
-    c.verifiedAt = new Date();
-  });
-  return listing;
+  const store = getDataStore();
+  const approved = store.approveListing(listingId, `Approved by ${moderatorId}`);
+  return approved ? mapStoredToExtendedListing(approved) : null;
 }
 
 export async function rejectListing(listingId: string, moderatorId: string, reason: string): Promise<ExtendedListing | null> {
-  const listing = MOCK_LISTINGS.find(l => l.id === listingId);
-  if (!listing) return null;
-  listing.status = 'rejected';
-  listing.rejectionReason = reason;
-  listing.updatedAt = new Date();
-  return listing;
+  const store = getDataStore();
+  const rejected = store.rejectListing(listingId, reason);
+  return rejected ? mapStoredToExtendedListing(rejected) : null;
 }
+

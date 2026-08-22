@@ -16,6 +16,8 @@ tsconfig.tsbuildinfo
 
 # D1 local DB files
 .wrangler/state/v3/d1/
+*.sqlite
+*.sqlite-journal
 
 # Environment Variables
 .env

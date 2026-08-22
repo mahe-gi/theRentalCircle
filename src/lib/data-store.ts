@@ -43,6 +43,8 @@ export interface StoredListing {
   submittedAt: string;
   publishedAt?: string;
   lastAvailabilityConfirmedAt: string;
+  moderationNotes?: string;
+  rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,34 +108,8 @@ class InMemoryStore {
   public getListingById(id: string): StoredListing | undefined {
     if (!id) return undefined;
     const cleanId = decodeURIComponent(id).trim().toLowerCase();
-    const direct = this.listings.get(id) || Array.from(this.listings.values()).find(
+    return this.listings.get(id) || Array.from(this.listings.values()).find(
       l => l.id.toLowerCase() === cleanId || l.slug.toLowerCase() === cleanId
-    );
-    if (direct) return direct;
-
-    // Cross-reference common seed ID aliases
-    const aliases: Record<string, string> = {
-      'lst_1rk_kondapur': '1rk-independent-kondapur-botanical',
-      'lst_room_gachibowli': 'private-room-colive-gachibowli',
-      'lst_2bhk_madhapur': '2bhk-semi-furnished-madhapur-ayyyappa',
-      'lst_3bhk_manikonda': '3bhk-family-apartment-manikonda',
-      'lst_2bhk_fd': '2bhk-gated-financial-district',
-      'lst_1bhk_hitec': '1bhk-serviced-hitec-city',
-      'listing-hyd-01': '1rk-independent-kondapur-botanical',
-      'listing-hyd-02': 'private-room-colive-gachibowli',
-      'listing-hyd-03': '2bhk-semi-furnished-madhapur-ayyyappa',
-      'listing-hyd-04': '3bhk-family-apartment-manikonda',
-      'listing-hyd-05': '2bhk-gated-financial-district',
-      'listing-hyd-06': '1bhk-serviced-hitec-city',
-    };
-
-    const targetSlug = aliases[cleanId];
-    if (targetSlug) {
-      return this.getListingBySlug(targetSlug);
-    }
-
-    return Array.from(this.listings.values()).find(l =>
-      cleanId.includes(l.cluster.toLowerCase()) || cleanId.includes(l.propertyType.toLowerCase())
     );
   }
 
@@ -179,7 +155,7 @@ class InMemoryStore {
     return listing;
   }
 
-  public approveListing(listingId: string): StoredListing | undefined {
+  public approveListing(listingId: string, notes?: string): StoredListing | undefined {
     let listing = this.listings.get(listingId);
     if (!listing) {
       listing = Array.from(this.listings.values()).find(l => l.slug === listingId);
@@ -189,6 +165,8 @@ class InMemoryStore {
     listing.status = 'published';
     listing.publishedAt = now;
     listing.lastAvailabilityConfirmedAt = now;
+    if (notes) listing.moderationNotes = notes;
+    listing.rejectionReason = undefined;
     listing.updatedAt = now;
     if (listing.evidence) {
       listing.evidence.verified = true;
@@ -205,6 +183,7 @@ class InMemoryStore {
     if (!listing) return undefined;
     const now = new Date().toISOString();
     listing.status = 'rejected';
+    listing.rejectionReason = reason || 'Listing did not meet requirements';
     listing.updatedAt = now;
     this.listings.set(listing.id, listing);
     return listing;
@@ -239,9 +218,7 @@ class InMemoryStore {
         return (
           reqListingId === targetId ||
           reqListingId === targetSlug ||
-          reqListingId === cleanId ||
-          (listing && reqListingId === 'lst_1rk_kondapur' && targetSlug.includes('1rk-independent')) ||
-          (listing && reqListingId === 'listing-hyd-01' && targetSlug.includes('1rk-independent'))
+          reqListingId === cleanId
         );
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

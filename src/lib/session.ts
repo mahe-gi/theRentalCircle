@@ -21,55 +21,9 @@ export interface FastLoginProfile {
   redirectUrl: string;
 }
 
-export const TEST_ACCOUNTS: Record<string, SessionUser> = {
-  'chmahesh997@gmail.com': {
-    id: 'usr_admin_mahesh',
-    name: 'Mahesh (Founder / Admin)',
-    email: 'chmahesh997@gmail.com',
-    role: 'admin',
-    userType: 'admin',
-    phone: '+91 99999 00000',
-    phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
-  },
-  'admin.trc@therentalcircle.in': {
-    id: 'usr_admin_trc',
-    name: 'Founder / Moderator',
-    email: 'admin.trc@therentalcircle.in',
-    role: 'admin',
-    userType: 'admin',
-    phone: '+91 99999 00000',
-    phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
-  },
-  'admin@therentalcircle.in': {
-    id: 'usr_admin_trc',
-    name: 'Founder / Moderator',
-    email: 'admin.trc@therentalcircle.in',
-    role: 'admin',
-    userType: 'admin',
-    phone: '+91 99999 00000',
-    phoneVerified: true,
-    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80',
-  },
-};
+export const TEST_ACCOUNTS: Record<string, SessionUser> = {};
 
-export const FAST_LOGIN_PROFILES: FastLoginProfile[] = [
-  {
-    id: 'profile_admin_mahesh',
-    label: 'Mahesh (Founder)',
-    roleDescription: 'Platform Founder & Admin Moderation Desk',
-    user: TEST_ACCOUNTS['chmahesh997@gmail.com'],
-    redirectUrl: '/admin/listings',
-  },
-  {
-    id: 'profile_admin',
-    label: 'Founder / Moderator',
-    roleDescription: 'Admin • Platform Operator & Moderation Desk',
-    user: TEST_ACCOUNTS['admin.trc@therentalcircle.in'],
-    redirectUrl: '/admin/listings',
-  },
-];
+export const FAST_LOGIN_PROFILES: FastLoginProfile[] = [];
 
 const SESSION_STORAGE_KEY = 'trc_session_user';
 const SESSION_COOKIE_NAME = 'trc_session';
@@ -150,11 +104,6 @@ export function isAuthorizedAdmin(email?: string): boolean {
 
 export function findTestAccountByEmail(email: string): SessionUser {
   const normalized = email.trim().toLowerCase();
-  if (TEST_ACCOUNTS[normalized]) {
-    return TEST_ACCOUNTS[normalized];
-  }
-
-  // If not a pre-configured test email, create a verified user session for that email
   const isOwner = normalized.includes('owner');
   const isAdmin = isAuthorizedAdmin(normalized);
   const namePart = normalized.split('@')[0].replace(/[._-]/g, ' ');
@@ -166,7 +115,7 @@ export function findTestAccountByEmail(email: string): SessionUser {
     email: normalized,
     role: isAdmin ? 'admin' : 'user',
     userType: isAdmin ? 'admin' : isOwner ? 'owner' : 'renter',
-    phoneVerified: true,
+    phoneVerified: false,
   };
 }
 
@@ -264,8 +213,8 @@ export function useSession() {
         role: isAdmin ? 'admin' : 'user',
         userType: resolvedType,
         avatarUrl: betterSession.user.image || existing?.avatarUrl || undefined,
-        phone: existing?.phone || '+91 98000 00000',
-        phoneVerified: true,
+        phone: existing?.phone || undefined,
+        phoneVerified: !!existing?.phoneVerified,
       };
 
       setSessionUser(mappedUser);
